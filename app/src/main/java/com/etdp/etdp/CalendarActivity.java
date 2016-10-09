@@ -355,23 +355,28 @@ public class CalendarActivity extends Activity
             // List the next 10 events from the primary calendar.
             DateTime now = new DateTime(System.currentTimeMillis());
             List<String> eventStrings = new ArrayList<String>();
-            Events events = mService.events().list("primary")
+
+            Events events = mService.events().list("primary").setQ("test").execute();
+            /*Events events = mService.events().list("primary")
                     .setMaxResults(10)
                     .setTimeMin(now)
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
                     .execute();
+                    */
             List<Event> items = events.getItems();
 
             for (Event event : items) {
                 DateTime start = event.getStart().getDateTime();
-                if (start == null) {
+                /*if (start == null) {
                     // All-day events don't have start times, so just use
                     // the start date.
                     start = event.getStart().getDate();
                 }
                 eventStrings.add(
                         String.format("%s (%s)", event.getSummary(), start));
+                        */
+                eventStrings.add("Even Summary: "+event.getSummary() + "\n\nEvent Recurrence: " + event.getRecurrence()+"\n\nEvent Location: "+event.getLocation()+"\n\nEvent Start: "+event.getStart() + "\n\nEvent End: " + event.getEnd());
             }
             return eventStrings;
         }
