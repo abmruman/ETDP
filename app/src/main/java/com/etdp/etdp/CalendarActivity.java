@@ -376,8 +376,18 @@ public class CalendarActivity extends Activity
                 eventStrings.add(
                         String.format("%s (%s)", event.getSummary(), start));
                         */
-                eventStrings.add("Even Summary: "+event.getSummary() + "\n\nEvent Recurrence: " + event.getRecurrence()+"\n\nEvent Location: "+event.getLocation()+"\n\nEvent Start: "+event.getStart() + "\n\nEvent End: " + event.getEnd());
+                eventStrings.add("Current Time: " +now+ "\n\nEven Summary: "+event.getSummary() + "\n\nEvent Recurrence: " + event.getRecurrence()+"\n\nEvent Location: "+event.getLocation()+"\n\nEvent Start: "+event.getStart() + "\n\nEvent End: " + event.getEnd());
             }
+            /*
+            *   National holidays
+            * */
+            events = mService.events().list("en.bd#holiday@group.v.calendar.google.com").setTimeMin(now).setMaxResults(10).execute();
+            items = events.getItems();
+
+            for(Event event : items) {
+                eventStrings.add("\n\nHoliday: " + event.getSummary() + "\nStart Date: "+event.getStart() + "\nEnd Date: "+event.getEnd());
+            }
+
             return eventStrings;
         }
 
