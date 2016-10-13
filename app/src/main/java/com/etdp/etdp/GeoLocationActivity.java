@@ -17,6 +17,7 @@ public class GeoLocationActivity extends AppCompatActivity {
     private LocationManager locationManager;
     // Define a listener that responds to location updates
     private LocationListener locationListener;
+
     private static final int TWO_MINUTES = 1000 * 60 * 2;
 
     @Override
@@ -50,17 +51,18 @@ public class GeoLocationActivity extends AppCompatActivity {
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
             //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
+            //                                          int[] grantResults);
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        locationManager.requestLocationUpdates(locationManager.NETWORK_PROVIDER, 0, 0, locationListener) ;
 
         setContentView(R.layout.activity_geo_location);
     }
 
     private boolean startLitening() {
+
         String locationProvider = LocationManager.NETWORK_PROVIDER;
         // Or, use GPS location data:
         // String locationProvider = LocationManager.GPS_PROVIDER;
@@ -160,6 +162,8 @@ public class GeoLocationActivity extends AppCompatActivity {
 
     private void useNewLocation(Location location) {
         // TODO: 10-Oct-16 Test Location service
-        Toast.makeText(this, location.toString(), Toast.LENGTH_SHORT).show();
+
+        Toast.makeText(this, "ETDP: "+location.toString(), Toast.LENGTH_LONG).show();
     }
+
 }
