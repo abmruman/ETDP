@@ -2,17 +2,29 @@ package com.etdp.etdp;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
-public class GeoLocationActivity extends AppCompatActivity {
 
+import java.util.List;
+
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
+
+public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
+
+    static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
     // Acquire a reference to the system Location Manager
     private LocationManager locationManager;
     // Define a listener that responds to location updates
@@ -23,6 +35,7 @@ public class GeoLocationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         // Register the listener with the Location Manager to receive location updates
         /** Location Manager & Listener **/
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -54,6 +67,7 @@ public class GeoLocationActivity extends AppCompatActivity {
             //                                          int[] grantResults);
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            checkPermission();
             return;
         }
         locationManager.requestLocationUpdates(locationManager.NETWORK_PROVIDER, 0, 0, locationListener) ;
@@ -78,6 +92,7 @@ public class GeoLocationActivity extends AppCompatActivity {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            checkPermission();
             return false;
         }
         locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
@@ -100,6 +115,7 @@ public class GeoLocationActivity extends AppCompatActivity {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            checkPermission();
             return null;
         }
         return locationManager.getLastKnownLocation(locationProvider);
@@ -166,4 +182,56 @@ public class GeoLocationActivity extends AppCompatActivity {
         Toast.makeText(this, "ETDP: "+location.toString(), Toast.LENGTH_LONG).show();
     }
 
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(
+                requestCode, permissions, grantResults, this);
+    }
+
+    public void statusCheck() {
+        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps();
+
+        }
+    }
+
+    private void buildAlertMessageNoGps() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    @AfterPermissionGranted(REQUEST_PERMISSION_ACCESS_FINE_LOCATION)
+    private void checkPermission() {
+        if(EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            statusCheck();
+        } else {
+            EasyPermissions.requestPermissions(this, "This app needs to access your location", REQUEST_PERMISSION_ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+    }
 }
