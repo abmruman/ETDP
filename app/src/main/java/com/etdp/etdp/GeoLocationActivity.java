@@ -57,9 +57,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
         // Register the listener with the Location Manager to receive location updates
         if (ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+                this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -70,6 +68,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
             checkPermission();
             return;
         }
+        statusCheck();
         locationManager.requestLocationUpdates(locationManager.NETWORK_PROVIDER, 0, 0, locationListener) ;
 
         setContentView(R.layout.activity_geo_location);
@@ -79,12 +78,10 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
         String locationProvider = LocationManager.NETWORK_PROVIDER;
         // Or, use GPS location data:
-        // String locationProvider = LocationManager.GPS_PROVIDER;
+         // String locationProvider = LocationManager.GPS_PROVIDER;
 
         if (ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
+                this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -95,6 +92,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
             checkPermission();
             return false;
         }
+        statusCheck();
         locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
         return true;
     }
@@ -105,9 +103,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
         Location lastKnownLocation;
 
         if (ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
+                this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -118,6 +114,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
             checkPermission();
             return null;
         }
+        statusCheck();
         return locationManager.getLastKnownLocation(locationProvider);
     }
 
@@ -200,11 +197,10 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
     }
 
     public void statusCheck() {
-        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        //final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             buildAlertMessageNoGps();
-
         }
     }
 
@@ -228,9 +224,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
     @AfterPermissionGranted(REQUEST_PERMISSION_ACCESS_FINE_LOCATION)
     private void checkPermission() {
-        if(EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            statusCheck();
-        } else {
+        if(!EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
             EasyPermissions.requestPermissions(this, "This app needs to access your location", REQUEST_PERMISSION_ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
         }
     }
