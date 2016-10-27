@@ -2,4 +2,6 @@
     <string name="app_name">ETDP</string>
     <string name="action_settings">Settings</string>
     <string name="ServiceStatus">Stopped</string>
+    <string name="mainServiceStarted">Main Service Started</string>
+    <string name="mainServiceStopped">Main Service Stopped</string>
 </resources>
