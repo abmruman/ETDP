@@ -30,5 +30,6 @@ dependencies {
     compile('com.google.apis:google-api-services-calendar:v3-rev214-1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
-
+    compile 'com.android.support:design:23.4.0'
+    testCompile 'junit:junit:4.12'
 }
