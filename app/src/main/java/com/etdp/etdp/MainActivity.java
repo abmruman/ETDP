@@ -92,6 +92,9 @@ public class MainActivity extends AppCompatActivity {
 		Intent intent = new Intent(this, ETDPService.class);
 		intent.putExtra("Source", "MainActivity");
 		startService(intent);
+		Intent intentCalendar = new Intent(this, CalendarActivity.class);
+		intentCalendar.putExtra("Source", "MainActivity");
+		startActivity(intentCalendar);
 	}
 
 	public void stopMainService() {
