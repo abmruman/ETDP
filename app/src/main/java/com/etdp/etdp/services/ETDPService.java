@@ -11,6 +11,8 @@ public class ETDPService extends Service {
 	static final public String SERVICE_STATUS_UPDATE = "com.etdp.etdp.ETDPService.SERVICE_STATUS_UPDATE";
 	static final public String SERVICE_STATUS = "com.etdp.etdp.ETDPService.SERVICE_STATUS";
 	static final public String SERVICE_ETDP = "SERVICE_ETDP";
+
+
 	public static boolean status;
 	private LocalBroadcastManager broadcaster;
 
@@ -26,6 +28,7 @@ public class ETDPService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d(SERVICE_ETDP, "onStartCommand()");
+
 		return Service.START_STICKY;
 	}
 

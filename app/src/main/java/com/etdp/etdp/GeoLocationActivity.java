@@ -1,9 +1,11 @@
 package com.etdp.etdp;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -14,9 +16,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
-
-import com.etdp.etdp.services.ETDPService;
 
 import java.util.List;
 
@@ -26,16 +27,66 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
+	private static final int TWO_MINUTES = 1000 * 60 * 2;
+	private static final String COUNTER_START_TIME = "COUNTER_START_TIME";
+	private static final String COUNTER_END_TIME = "COUNTER_END_TIME";
+	private static final String IS_MONITORING = "IS_MONITORING";
+	SharedPreferences sharedPref;
 	// Acquire a reference to the system Location Manager
 	private LocationManager locationManager;
 	// Define a listener that responds to location updates
 	private LocationListener locationListener;
-
-	private static final int TWO_MINUTES = 1000 * 60 * 2;
+	private Button mStartMonitorButton;
+	private long diffTime;
+	private Location startLocation;
+	private Location endLocation;
+	private Long startTime;
+	private Long endTime;
+	private Boolean isMonitoring;
+	private Thread timerThread;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_geo_location);
+
+		mStartMonitorButton = (Button) findViewById(R.id.mStartButton);
+
+		sharedPref = getPreferences(Context.MODE_PRIVATE);
+		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
+		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
+		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
+
+		timerThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					if (isMonitoring) {
+						mStartMonitorButton.post(new Runnable() {
+							public void run() {
+								diffTime = System.currentTimeMillis() - startTime;
+								int seconds = (int) (diffTime / 1000);
+								int minutes = seconds / 60;
+								seconds = seconds % 60;
+								int hours = minutes / 60;
+								minutes = minutes % 60;
+								if(hours>0){
+									mStartMonitorButton.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
+								}else {
+									mStartMonitorButton.setText(String.format("%d:%02d", minutes, seconds));
+								}
+							}
+						});
+					}
+				}
+			}
+		});
+		timerThread.start();
 
 		// Register the listener with the Location Manager to receive location updates
 		/** Location Manager & Listener **/
@@ -43,6 +94,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		locationListener = new LocationListener() {
 			public void onLocationChanged(Location location) {
 				// Called when a new location is found by the network location provider.
+				// TODO: Use Location Only when needed
 				useNewLocation(location);
 			}
 
@@ -56,40 +108,16 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			}
 		};
 
-		// Register the listener with the Location Manager to receive location updates
-		if (ActivityCompat.checkSelfPermission(
-				this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-			// TODO: Consider calling
-			//    ActivityCompat#requestPermissions
-			// here to request the missing permissions, and then overriding
-			//   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-			//                                          int[] grantResults);
-			// to handle the case where the user grants the permission. See the documentation
-			// for ActivityCompat#requestPermissions for more details.
-			checkPermission();
-			return;
-		}
-		statusCheck();
-		locationManager.requestLocationUpdates(locationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-
-		setContentView(R.layout.activity_geo_location);
+		startListening();
 	}
 
-	private boolean startLitening() {
-
+	private boolean startListening() {
 		String locationProvider = LocationManager.NETWORK_PROVIDER;
-		// Or, use GPS location data:
+		/*** Or, use GPS location data: ***/
 		// String locationProvider = LocationManager.GPS_PROVIDER;
 
 		if (ActivityCompat.checkSelfPermission(
 				this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-			// TODO: Consider calling
-			//    ActivityCompat#requestPermissions
-			// here to request the missing permissions, and then overriding
-			//   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-			//                                          int[] grantResults)
-			// to handle the case where the user grants the permission. See the documentation
-			// for ActivityCompat#requestPermissions for more details.
 			checkPermission();
 			return false;
 		}
@@ -105,13 +133,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 		if (ActivityCompat.checkSelfPermission(
 				this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-			// TODO: Consider calling
-			//    ActivityCompat#requestPermissions
-			// here to request the missing permissions, and then overriding
-			//   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-			//                                          int[] grantResults)
-			// to handle the case where the user grants the permission. See the documentation
-			// for ActivityCompat#requestPermissions for more details.
 			checkPermission();
 			return null;
 		}
@@ -179,8 +200,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	}
 
 	private void useNewLocation(Location location) {
-		// TODO: 10-Oct-16 Test Location service
-
 		Toast.makeText(this, "ETDP: " + location.toString(), Toast.LENGTH_LONG).show();
 	}
 
@@ -203,7 +222,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 	public void statusCheck() {
 		//final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
 		if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
 			buildAlertMessageNoGps();
 		}
@@ -235,24 +253,58 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	}
 
 
-	public void startMainService() {
-		Intent intent = new Intent(this, ETDPService.class);
-		intent.putExtra("Source", "MainActivity");
-		startService(intent);
+	public void startMonitoring() {
+		if (!isMonitoring) {
+			/*Intent intent = new Intent(this, ETDPService.class);
+			//intent.putExtra("Source", "MainActivity");
+			startService(intent);*/
+
+			startTime = System.currentTimeMillis();
+			isMonitoring = true;
+
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putLong(COUNTER_START_TIME, startTime);
+			editor.putBoolean(IS_MONITORING, isMonitoring);
+			editor.commit();
+
+			mStartMonitorButton.setText("Started Monitoring");
+		}
 	}
 
-	public void stopMainService() {
-		Intent intent = new Intent(this, ETDPService.class);
-		intent.putExtra("Source", "MainActivity");
-		stopService(intent);
+	public void stopMonitoring() {
+		/*Intent intent = new Intent(this, ETDPService.class);
+		//intent.putExtra("Source", "MainActivity");
+		stopService(intent);*/
+
+		endTime = System.currentTimeMillis();
+		isMonitoring = false;
+
+		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.putLong(COUNTER_END_TIME, endTime);
+		editor.putBoolean(IS_MONITORING, isMonitoring);
+		editor.commit();
+
+		mStartMonitorButton.setText("Start Monitoring");
 	}
 
-	public void startMainService(View view) {
-		startMainService();
+	public void startMonitoring(View view) {
+		startMonitoring();
+
 	}
 
-	public void stopMainService(View view) {
-		stopMainService();
+	public void stopMonitoring(View view) {
+		stopMonitoring();
 	}
+
+	private boolean isTheServiceRunning(Class<?> serviceClass) {
+		ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+		for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+			if (serviceClass.getName().equals(service.service.getClassName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 }
