@@ -16,28 +16,32 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
 	private static final String COUNTER_START_TIME = "COUNTER_START_TIME";
 	private static final String COUNTER_END_TIME = "COUNTER_END_TIME";
 	private static final String IS_MONITORING = "IS_MONITORING";
+
 	SharedPreferences sharedPref;
 	// Acquire a reference to the system Location Manager
 	private LocationManager locationManager;
 	// Define a listener that responds to location updates
 	private LocationListener locationListener;
-	private Button mStartMonitorButton;
+
+	//private Button mStartMonitorButton;
+	private ToggleButton mToggleMonitorButton;
+
 	private long diffTime;
 	private Location startLocation;
 	private Location endLocation;
@@ -45,20 +49,38 @@ class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.P
 	private Long endTime;
 	private Boolean isMonitoring;
 	private Thread timerThread;
-	private TextView textViewTimer;
+	private TextView mTimerText;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_geo_location);
 
-		mStartMonitorButton = (Button) findViewById(R.id.mStartButton);
-        textViewTimer = (TextView) findViewById(R.id.textViewTimer);
+		//mStartMonitorButton = (Button) findViewById(R.id.monitorButton);
+        mTimerText = (TextView) findViewById(R.id.textViewTimer);
+		mToggleMonitorButton = (ToggleButton) findViewById(R.id.buttonMonitor);
 
 		sharedPref = getPreferences(Context.MODE_PRIVATE);
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
+
+		if(isMonitoring){
+			mToggleMonitorButton.setChecked(true);
+		}else{
+			mToggleMonitorButton.setChecked(false);
+		}
+
+		mToggleMonitorButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if(!isMonitoring){
+					startMonitoring();
+				}else{
+					stopMonitoring();
+				}
+			}
+		});
 
 		timerThread = new Thread(new Runnable() {
 			@Override
@@ -70,7 +92,7 @@ class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.P
 						e.printStackTrace();
 					}
 					if (isMonitoring) {
-						mStartMonitorButton.post(new Runnable() {
+						mToggleMonitorButton.post(new Runnable() {
 							public void run() {
 								diffTime = System.currentTimeMillis() - startTime;
 								int seconds = (int) (diffTime / 1000);
@@ -80,12 +102,12 @@ class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.P
 								minutes = minutes % 60;
 								if(hours>0){
 									//mStartMonitorButton.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
-								    textViewTimer.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
+								    mTimerText.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
                                 }else {
 									//mStartMonitorButton.setText(String.format("%d:%02d", minutes, seconds));
-                                    textViewTimer.setText(String.format("%d:%02d", minutes, seconds));
+                                    mTimerText.setText(String.format("%d:%02d", minutes, seconds));
 								}
-                                textViewTimer.setVisibility(View.VISIBLE);
+                                mTimerText.setVisibility(View.VISIBLE);
 							}
 						});
 					}
@@ -272,8 +294,6 @@ class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.P
 			editor.putLong(COUNTER_START_TIME, startTime);
 			editor.putBoolean(IS_MONITORING, isMonitoring);
 			editor.commit();
-
-			mStartMonitorButton.setText("Started Monitoring");
 		}
 	}
 
@@ -281,7 +301,7 @@ class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.P
 		/*Intent intent = new Intent(this, ETDPService.class);
 		//intent.putExtra("Source", "MainActivity");
 		stopService(intent);*/
-        textViewTimer.setVisibility(View.INVISIBLE);
+        mTimerText.setVisibility(View.INVISIBLE);
 		endTime = System.currentTimeMillis();
 		isMonitoring = false;
 
@@ -289,17 +309,6 @@ class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.P
 		editor.putLong(COUNTER_END_TIME, endTime);
 		editor.putBoolean(IS_MONITORING, isMonitoring);
 		editor.commit();
-
-		mStartMonitorButton.setText("Start Monitoring");
-	}
-
-	public void startMonitoring(View view) {
-		startMonitoring();
-
-	}
-
-	public void stopMonitoring(View view) {
-		stopMonitoring();
 	}
 
 	private boolean isTheServiceRunning(Class<?> serviceClass) {
