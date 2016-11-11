@@ -21,7 +21,31 @@
         android:text="@string/monitor_text"
         android:textAppearance="@style/TextAppearance.AppCompat"
         android:textSize="24sp"
+        android:gravity="center"
         android:typeface="monospace"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="25dp"/>
+
+    <TextView
+        android:id="@+id/textViewTimer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        android:text="@string/timer_text"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        android:textSize="32sp"
+        android:gravity="center"
+        android:typeface="monospace"
+        android:visibility="invisible"/>
+
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="25dp"/>
 
     <Button
         android:id="@+id/mStartButton"
@@ -39,11 +63,6 @@
         android:onClick="stopMonitoring"
         android:text="@string/stop_monitor"/>
 
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="50dp"/>
-
     <TextView
         android:id="@+id/textViewPredict"
         android:layout_width="match_parent"
@@ -52,6 +71,7 @@
         android:text="@string/predict_text"
         android:textAppearance="@style/TextAppearance.AppCompat"
         android:textSize="24sp"
+        android:gravity="center"
         android:typeface="monospace"/>
 
     <Button

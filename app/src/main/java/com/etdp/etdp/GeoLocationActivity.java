@@ -17,6 +17,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
@@ -44,6 +45,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private Long endTime;
 	private Boolean isMonitoring;
 	private Thread timerThread;
+	private TextView textViewTimer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +53,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		setContentView(R.layout.activity_geo_location);
 
 		mStartMonitorButton = (Button) findViewById(R.id.mStartButton);
+        textViewTimer = (TextView) findViewById(R.id.textViewTimer);
 
 		sharedPref = getPreferences(Context.MODE_PRIVATE);
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
@@ -76,10 +79,13 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 								int hours = minutes / 60;
 								minutes = minutes % 60;
 								if(hours>0){
-									mStartMonitorButton.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
-								}else {
-									mStartMonitorButton.setText(String.format("%d:%02d", minutes, seconds));
+									//mStartMonitorButton.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
+								    textViewTimer.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
+                                }else {
+									//mStartMonitorButton.setText(String.format("%d:%02d", minutes, seconds));
+                                    textViewTimer.setText(String.format("%d:%02d", minutes, seconds));
 								}
+                                textViewTimer.setVisibility(View.VISIBLE);
 							}
 						});
 					}
@@ -275,7 +281,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		/*Intent intent = new Intent(this, ETDPService.class);
 		//intent.putExtra("Source", "MainActivity");
 		stopService(intent);*/
-
+        textViewTimer.setVisibility(View.INVISIBLE);
 		endTime = System.currentTimeMillis();
 		isMonitoring = false;
 
