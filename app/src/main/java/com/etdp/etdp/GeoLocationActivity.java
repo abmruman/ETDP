@@ -16,6 +16,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -42,6 +43,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	//private Button mStartMonitorButton;
 	private ToggleButton mToggleMonitorButton;
 
+	/* Declaration of predict time button */
+	private Button mPredictTimeButton;
+
 	private long diffTime;
 	private Location startLocation;
 	private Location endLocation;
@@ -60,6 +64,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
         mTimerText = (TextView) findViewById(R.id.textViewTimer);
 		mToggleMonitorButton = (ToggleButton) findViewById(R.id.buttonMonitor);
 
+		/* Initialization of mPredictTimeButton */
+		mPredictTimeButton = (Button) findViewById(R.id.predictButton);
+
 		sharedPref = getPreferences(Context.MODE_PRIVATE);
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
@@ -71,6 +78,14 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			mToggleMonitorButton.setChecked(false);
 		}
 
+		/* Implementation of mPredictTimeButton */
+		mPredictTimeButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent intent = new Intent(GeoLocationActivity.this, PredictActivity.class);
+				startActivity(intent);
+			}
+		});
 		mToggleMonitorButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
