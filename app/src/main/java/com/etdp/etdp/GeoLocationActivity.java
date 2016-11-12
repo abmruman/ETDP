@@ -20,13 +20,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.api.client.util.DateTime;
+
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
-
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
 	private static final String COUNTER_START_TIME = "COUNTER_START_TIME";
@@ -34,54 +35,66 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private static final String IS_MONITORING = "IS_MONITORING";
 
 	SharedPreferences sharedPref;
+	// Define LocationProvider either GPS or Network provider
+	String locationProvider;
 	// Acquire a reference to the system Location Manager
 	private LocationManager locationManager;
 	// Define a listener that responds to location updates
 	private LocationListener locationListener;
-
-	//private Button mStartMonitorButton;
 	private ToggleButton mToggleMonitorButton;
+	private TextView mTimerText;
 
 	private long diffTime;
 	private Location startLocation;
+	private Location currentLocation;
 	private Location endLocation;
 	private Long startTime;
 	private Long endTime;
 	private Boolean isMonitoring;
 	private Thread timerThread;
-	private TextView mTimerText;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_geo_location);
 
-		//mStartMonitorButton = (Button) findViewById(R.id.monitorButton);
-        mTimerText = (TextView) findViewById(R.id.textViewTimer);
+		mTimerText = (TextView) findViewById(R.id.textViewTimer);
 		mToggleMonitorButton = (ToggleButton) findViewById(R.id.buttonMonitor);
-
+		/***
+		 *
+		 * Shared Preference for temporary data.
+		 *
+		 ***/
 		sharedPref = getPreferences(Context.MODE_PRIVATE);
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
-
-		if(isMonitoring){
+		/***
+		 *
+		 * Sets Button state & ClickListener
+		 *
+		 ***/
+		if (isMonitoring) {
 			mToggleMonitorButton.setChecked(true);
-		}else{
+		} else {
 			mToggleMonitorButton.setChecked(false);
 		}
 
 		mToggleMonitorButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if(!isMonitoring){
+				if (!isMonitoring) {
 					startMonitoring();
-				}else{
+				} else {
 					stopMonitoring();
 				}
 			}
 		});
-
+		/***
+		 *
+		 * Timer Thread
+		 *
+		 ***/
 		timerThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -101,13 +114,11 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 								int hours = minutes / 60;
 								minutes = minutes % 60;
 								if(hours>0){
-									//mStartMonitorButton.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
-								    mTimerText.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
-                                }else {
-									//mStartMonitorButton.setText(String.format("%d:%02d", minutes, seconds));
-                                    mTimerText.setText(String.format("%d:%02d", minutes, seconds));
+									mTimerText.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
+								}else {
+									mTimerText.setText(String.format("%d:%02d", minutes, seconds));
 								}
-                                mTimerText.setVisibility(View.VISIBLE);
+								mTimerText.setVisibility(View.VISIBLE);
 							}
 						});
 					}
@@ -115,56 +126,90 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			}
 		});
 		timerThread.start();
-
+		/***
+		 *
+		 * Calls Location API
+		 *
+		 ***/
 		// Register the listener with the Location Manager to receive location updates
-		/** Location Manager & Listener **/
+		/*** Location Manager & Listener ***/
 		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+		/*** use Network location data: ***/
+		locationProvider = LocationManager.NETWORK_PROVIDER;
+		/*** Or, use GPS location data: ***/
+		//locationProvider = LocationManager.GPS_PROVIDER;
+
 		locationListener = new LocationListener() {
 			public void onLocationChanged(Location location) {
 				// Called when a new location is found by the network location provider.
-				// TODO: Use Location Only when needed
-				useNewLocation(location);
+				Toast.makeText(GeoLocationActivity.this, "onLocationChanged", Toast.LENGTH_SHORT).show();
+				saveNewLocation(location);
 			}
 
 			public void onStatusChanged(String provider, int status, Bundle extras) {
+				Toast.makeText(GeoLocationActivity.this, "onStatusChanged", Toast.LENGTH_SHORT).show();
 			}
 
 			public void onProviderEnabled(String provider) {
+				Toast.makeText(GeoLocationActivity.this, "onProviderEnabled", Toast.LENGTH_SHORT).show();
 			}
 
 			public void onProviderDisabled(String provider) {
+				Toast.makeText(GeoLocationActivity.this, "onProviderDisabled", Toast.LENGTH_SHORT).show();
 			}
 		};
 
-		startListening();
+
 	}
 
-	private boolean startListening() {
-		String locationProvider = LocationManager.NETWORK_PROVIDER;
-		/*** Or, use GPS location data: ***/
-		// String locationProvider = LocationManager.GPS_PROVIDER;
+	@Override
+	protected void onStart() {
+		super.onStart();
+		requestLocationUpdates();
+	}
 
+	@Override
+	protected void onStop() {
+		removeLocationUpdateRequest();
+		super.onStop();
+	}
+
+	private boolean requestLocationUpdates() {
 		if (ActivityCompat.checkSelfPermission(
-				this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+				this, Manifest.permission.ACCESS_FINE_LOCATION)
+				!= PackageManager.PERMISSION_GRANTED) {
 			checkPermission();
 			return false;
 		}
-		statusCheck();
-		locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
+		locationManager.requestLocationUpdates(
+				locationProvider,
+				1000,
+				0,
+				locationListener
+		);
+		//locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
 		return true;
 	}
 
+	private void removeLocationUpdateRequest() {
+		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+			checkPermission();
+			return;
+		}
+		locationManager.removeUpdates(locationListener);
+
+	}
+
 	private Location lastKnownLocation() {
-		String locationProvider = LocationManager.NETWORK_PROVIDER;
+		//String locationProvider = LocationManager.NETWORK_PROVIDER;
 		// Or use LocationManager.GPS_PROVIDER
 		Location lastKnownLocation;
 
-		if (ActivityCompat.checkSelfPermission(
-				this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 			checkPermission();
 			return null;
 		}
-		statusCheck();
 		return locationManager.getLastKnownLocation(locationProvider);
 	}
 
@@ -227,13 +272,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		return provider1.equals(provider2);
 	}
 
-	private void useNewLocation(Location location) {
-		Toast.makeText(this, "ETDP: " + location.toString(), Toast.LENGTH_LONG).show();
-	}
-
 	@Override
 	public void onPermissionsGranted(int requestCode, List<String> perms) {
-
+		requestLocationUpdates();
 	}
 
 	@Override
@@ -249,8 +290,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	}
 
 	public void statusCheck() {
-		//final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+		if (!locationManager.isProviderEnabled(locationProvider)) {
 			buildAlertMessageNoGps();
 		}
 	}
@@ -275,7 +315,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 	@AfterPermissionGranted(REQUEST_PERMISSION_ACCESS_FINE_LOCATION)
 	private void checkPermission() {
-		if (!EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+		if (EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+			statusCheck();
+		} else {
 			EasyPermissions.requestPermissions(this, "This app needs to access your location", REQUEST_PERMISSION_ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
 		}
 	}
@@ -294,6 +336,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			editor.putLong(COUNTER_START_TIME, startTime);
 			editor.putBoolean(IS_MONITORING, isMonitoring);
 			editor.commit();
+			// TODO: Save Start location
 		}
 	}
 
@@ -301,7 +344,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		/*Intent intent = new Intent(this, ETDPService.class);
 		//intent.putExtra("Source", "MainActivity");
 		stopService(intent);*/
-        mTimerText.setVisibility(View.INVISIBLE);
+		mTimerText.setVisibility(View.INVISIBLE);
 		endTime = System.currentTimeMillis();
 		isMonitoring = false;
 
@@ -309,6 +352,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		editor.putLong(COUNTER_END_TIME, endTime);
 		editor.putBoolean(IS_MONITORING, isMonitoring);
 		editor.commit();
+		// TODO: Save End location
 	}
 
 	private boolean isTheServiceRunning(Class<?> serviceClass) {
@@ -321,5 +365,18 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		return false;
 	}
 
+	private void saveNewLocation(Location location) {
+		if (location != null) {
+			currentLocation = location;
+			Toast.makeText(
+					this,
+					"(" + location.getLatitude() +", "+ location.getLongitude() + ") "
+							+ (new DateTime(location.getTime())).toString(),
+					Toast.LENGTH_LONG
+			).show();
+			return;
+		}
+		Toast.makeText(this, "ETDP: " + "NULL location", Toast.LENGTH_LONG).show();
+	}
 
 }
