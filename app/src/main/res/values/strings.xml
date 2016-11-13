@@ -1,10 +1,12 @@
 <resources>
-    <string name="app_name">ETDP</string>
-    <string name="start_monitor">Start Monitoring</string>
-    <string name="monitoring">Monitoring</string>
-    <string name="monitor_text">Monitor Travel Time</string>
-    <string name="timer_text"></string>
-    <string name="predict_text">Predict ETD (Estimated Time of Departure)</string>
-    <string name="predict_time">Predict Time</string>
-    <string name="example_autocompletetextview">Example showing AutoCompleteTextView</string>
+	<string name="app_name">ETDP</string>
+	<string name="start_monitor">Start Monitoring</string>
+	<string name="monitoring">Monitoring</string>
+	<string name="monitor_text">Monitor Travel Time</string>
+	<string name="timer_text"></string>
+	<string name="predict_text">Predict ETD (Estimated Time of Departure)</string>
+	<string name="predict_time">Predict Time</string>
+	<string name="prediction">Prediction</string>
+	<string name="destination">Destination</string>
+	<string name="start_point">Starting Point</string>
 </resources>

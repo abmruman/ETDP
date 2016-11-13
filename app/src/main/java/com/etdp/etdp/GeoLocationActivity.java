@@ -82,7 +82,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		mPredictTimeButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				Intent intent = new Intent(GeoLocationActivity.this, PredictActivity.class);
+				Intent intent = new Intent(GeoLocationActivity.this, PredictionActivity.class);
 				startActivity(intent);
 			}
 		});
