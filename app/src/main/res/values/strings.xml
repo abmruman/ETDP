@@ -3,7 +3,7 @@
 	<string name="start_monitor">Start Monitoring</string>
 	<string name="monitoring">Monitoring</string>
 	<string name="monitor_text">Monitor Travel Time</string>
-	<string name="timer_text"></string>
+	<string name="timer_text">0:00</string>
 	<string name="predict_text">Predict ETD (Estimated Time of Departure)</string>
 	<string name="predict_time">Predict Time</string>
 </resources>
