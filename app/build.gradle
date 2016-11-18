@@ -1,34 +1,35 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
-    defaultConfig {
-        applicationId "com.etdp.etdp"
-        minSdkVersion 17
-        targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
+	compileSdkVersion 23
+	buildToolsVersion "23.0.3"
+	defaultConfig {
+		applicationId "com.etdp.etdp"
+		minSdkVersion 17
+		targetSdkVersion 23
+		versionCode 1
+		versionName "1.0"
+		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+	}
+	buildTypes {
+		release {
+			minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.google.android.gms:play-services-auth:9.0.2'
-    compile 'pub.devrel:easypermissions:0.1.5'
-    compile('com.google.api-client:google-api-client-android:1.22.0') {
-        exclude group: 'org.apache.httpcomponents'
-    }
-    compile('com.google.apis:google-api-services-calendar:v3-rev214-1.22.0') {
-        exclude group: 'org.apache.httpcomponents'
-    }
+	compile fileTree(dir: 'libs', include: ['*.jar'])
+	compile 'com.android.support:appcompat-v7:23.4.0'
+	compile 'com.google.android.gms:play-services-auth:9.0.2'
+	compile 'pub.devrel:easypermissions:0.1.5'
+	compile 'com.google.code.gson:gson:2.8.0'
+	compile('com.google.api-client:google-api-client-android:1.22.0') {
+		exclude group: 'org.apache.httpcomponents'
+	}
+	compile('com.google.apis:google-api-services-calendar:v3-rev214-1.22.0') {
+		exclude group: 'org.apache.httpcomponents'
+	}
 
 }

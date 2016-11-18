@@ -14,10 +14,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import com.google.gson.Gson;
 
 import java.util.List;
 
@@ -25,13 +28,15 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+	private final String TAG = "GeoLocationActivity";
+
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
 	private static final String COUNTER_START_TIME = "COUNTER_START_TIME";
 	private static final String COUNTER_END_TIME = "COUNTER_END_TIME";
 	private static final String IS_MONITORING = "IS_MONITORING";
-	private static final String START_lOCATION = "START_lOCATION";
-	private static final String END_lOCATION = "START_lOCATION";
+	private static final String START_LOCATION = "START_LOCATION";
+	private static final String END_LOCATION = "END_LOCATION";
 
 
 	SharedPreferences sharedPref;
@@ -52,6 +57,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private boolean isMonitoring;
 	private Thread timerThread;
 
+	private final Gson gson = new Gson();
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -68,6 +75,15 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
+		startLocation = gson.fromJson(sharedPref.getString(START_LOCATION, null), Location.class);
+		endLocation = gson.fromJson(sharedPref.getString(END_LOCATION, null), Location.class);
+
+		try {
+			Log.d(TAG, "onCreate: StartLocation: " + startLocation.toString());
+			Log.d(TAG, "onCreate: EndLocation: " + endLocation.toString());
+		} catch (Exception e) {
+			Log.e(TAG, "onCreate: "+e.toString());
+		}
 		/***
 		 *
 		 * Sets Button state & ClickListener
@@ -121,7 +137,11 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			@Override
 			public void onLocationChanged(Location location) {
 				// Called when a new location is found by the network location provider.
-				Toast.makeText(GeoLocationActivity.this, "onLocationChanged", Toast.LENGTH_SHORT).show();
+				Toast.makeText(
+						GeoLocationActivity.this,
+						"onLocationChanged",
+						Toast.LENGTH_SHORT
+				).show();
 				if (isBetterLocation(location, currentLocation))
 					saveLocations(location);
 			}
@@ -176,7 +196,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
-						//e.printStackTrace();
 						return;
 					}
 				}
@@ -204,7 +223,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			SharedPreferences.Editor editor = sharedPref.edit();
 			editor.putLong(COUNTER_START_TIME, startTime);
 			editor.putBoolean(IS_MONITORING, isMonitoring);
-			editor.commit();
+			editor.apply();
 			return true;
 		}
 		return false;
@@ -223,7 +242,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			SharedPreferences.Editor editor = sharedPref.edit();
 			editor.putLong(COUNTER_END_TIME, endTime);
 			editor.putBoolean(IS_MONITORING, isMonitoring);
-			editor.commit();
+			editor.apply();
+
 			return true;
 		}
 		return false;
@@ -252,7 +272,11 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			} catch (Exception e) {
 				// uh oh. GPS is probably off
 				e.printStackTrace();
-				Toast.makeText(this, "Cannot request location. Please check if the GPS Setting is on.", Toast.LENGTH_LONG).show();
+				Toast.makeText(
+						this,
+						"Cannot request location. Please check if the GPS Setting is on.",
+						Toast.LENGTH_LONG
+				).show();
 			}
 		}
 	}
@@ -269,15 +293,28 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			Toast.makeText(this, "Location: " + "NULL", Toast.LENGTH_LONG).show();
 			return;
 		}
-		// TODO: Store start and stop locations.
+
 		currentLocation = location;
+		String jsonLocation = gson.toJson(location);
+		SharedPreferences.Editor editor = sharedPref.edit();
+
+		Log.d(TAG, "saveLocations: " + jsonLocation);
+
 		if (isMonitoring) {
-			startLocation = currentLocation;
-			state = "Start:";
+			startLocation = location;
+			state = "Start: ";
+			editor.putString(START_LOCATION, jsonLocation);
 		} else {
-			endLocation = currentLocation;
-			state = "end: ";
+			if (startLocation != null) {
+				endLocation = location;
+				state = "end: ";
+				editor.putString(END_LOCATION, jsonLocation);
+			} else {
+				state = "Current: ";
+			}
 		}
+		editor.apply();
+
 		Toast.makeText(
 				this,
 				state + location.toString(),
@@ -292,15 +329,11 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	 * @param currentBestLocation The current Location fix, to which you want to compare the new one
 	 */
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
-		if (currentBestLocation == null) {
-			// A new location is always better than no location
-			return true;
-		}
+		// A new location is always better than no location
+		if (currentBestLocation == null) return true;
 
-		if (location == null) {
-			// Current location is always better than no location
-			return false;
-		}
+		// Current location is always better than no location
+		if (location == null) return false;
 
 		// Check whether the new location fix is newer or older
 		long timeDelta = location.getTime() - currentBestLocation.getTime();
@@ -310,13 +343,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 		// If it's been more than two minutes since the current location, use the new location
 		// because the user has likely moved
-		if (isSignificantlyNewer) {
-			return true;
-		}
+		if (isSignificantlyNewer) return true;
 		// If the new location is more than two minutes older, it must be worse
-		if (isSignificantlyOlder) {
-			return false;
-		}
+		if (isSignificantlyOlder) return false;
 
 		// Check whether the new location fix is more or less accurate
 		int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
@@ -325,20 +354,13 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		boolean isSignificantlyLessAccurate = accuracyDelta > 200;
 
 		// Check if the old and new location are from the same provider
-		boolean isFromSameProvider = isSameProvider(location.getProvider(),
-				currentBestLocation.getProvider());
+		boolean isFromSameProvider =
+				isSameProvider(location.getProvider(), currentBestLocation.getProvider());
 
 		// Determine location quality using a combination of timeliness and accuracy
-		if (isMoreAccurate) {
-			return true;
-		}
-		if (isNewer && !isLessAccurate) {
-			return true;
-		}
-		if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
-			return true;
-		}
-		return false;
+		return isMoreAccurate
+				|| (isNewer && !isLessAccurate)
+				|| (isNewer && !isSignificantlyLessAccurate && isFromSameProvider);
 	}
 
 	/**
