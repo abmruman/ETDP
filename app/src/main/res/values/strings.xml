@@ -1,9 +1,17 @@
 <resources>
 	<string name="app_name">ETDP</string>
-	<string name="start_monitor">Start Monitoring</string>
-	<string name="monitoring">Monitoring</string>
-	<string name="monitor_text">Monitor Travel Time</string>
-	<string name="timer_text">0:00</string>
-	<string name="predict_text">Predict ETD (Estimated Time of Departure)</string>
-	<string name="predict_time">Predict Time</string>
+	<string name="text_start_monitor">Start Monitoring</string>
+	<string name="text_monitoring">Monitoring</string>
+	<string name="text_monitor">Monitor Travel Time</string>
+	<string name="text_timer_default">0:00</string>
+	<string name="text_predict">Predict ETD (Estimated Time of Departure)</string>
+	<string name="text_predict_time">Predict Time</string>
+	<string name="msg_updating_location">Updating location…</string>
+	<string name="msg_please_wait">Please Wait…</string>
+	<string name="msg_calling_DM_API">Calling Google DistanceMatrix API…</string>
+	<string name="msg_no_results">No results, Please check your internet connection.</string>
+	<string name="msg_location_request_failed">Location update request failed.</string>
+	<string name="msg_api_request_canceled">API request cancelled</string>
+	<string name="msg_turn_gps_on">Please turn your GPS on.</string>
+	<string name="msg_location_access_required">This app needs to access your location.</string>
 </resources>

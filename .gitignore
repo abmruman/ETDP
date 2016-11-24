@@ -12,8 +12,9 @@
 bin/
 gen/
 
-# Local configuration file (sdk path, etc)
+# Local configuration file (sdk path, API Key, etc)
 local.properties
+secrets.properties
 
 # Windows thumbnail db
 Thumbs.db

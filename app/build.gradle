@@ -12,6 +12,9 @@ android {
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 	}
 	buildTypes {
+		applicationVariants.all { variant ->
+			variant.buildConfigField "String", "DM_API_KEY", "\""+getApiKey()+"\""
+		}
 		release {
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -31,5 +34,10 @@ dependencies {
 	compile('com.google.apis:google-api-services-calendar:v3-rev214-1.22.0') {
 		exclude group: 'org.apache.httpcomponents'
 	}
+}
 
+def getApiKey(){
+	def Properties props = new Properties()
+	props.load(new FileInputStream(new File('secrets.properties')))
+	return props['DM_API_KEY']
 }

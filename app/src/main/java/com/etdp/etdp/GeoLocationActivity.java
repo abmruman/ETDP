@@ -2,6 +2,7 @@ package com.etdp.etdp;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -20,9 +22,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.etdp.etdp.data.DistanceMatrix;
 import com.google.gson.Gson;
 
 import java.util.List;
+import java.util.Locale;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -47,6 +51,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private LocationListener locationListener;
 	private ToggleButton mToggleMonitorButton;
 	private TextView mTimerText;
+	ProgressDialog mProgress;
+
 
 	private long diffTime;
 	private Location currentLocation;
@@ -63,6 +69,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_geo_location);
+
+		mProgress = new ProgressDialog(this);
+		mProgress.setMessage(getString(R.string.msg_please_wait));
 
 		mTimerText = (TextView) findViewById(R.id.textViewTimer);
 		mToggleMonitorButton = (ToggleButton) findViewById(R.id.buttonMonitor);
@@ -82,7 +91,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			Log.d(TAG, "onCreate: StartLocation: " + startLocation.toString());
 			Log.d(TAG, "onCreate: EndLocation: " + endLocation.toString());
 		} catch (Exception e) {
-			Log.e(TAG, "onCreate: "+e.toString());
+			Log.e(TAG, "onCreate: " + e.toString());
 		}
 		/***
 		 *
@@ -185,9 +194,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 								int hours = minutes / 60;
 								minutes = minutes % 60;
 								if (hours > 0) {
-									mTimerText.setText(String.format("%d:%02d:%02d", hours, minutes, seconds));
+									mTimerText.setText(String.format(Locale.ENGLISH, "%d:%02d:%02d", hours, minutes, seconds));
 								} else {
-									mTimerText.setText(String.format("%d:%02d", minutes, seconds));
+									mTimerText.setText(String.format(Locale.ENGLISH, "%d:%02d", minutes, seconds));
 								}
 								mTimerText.setVisibility(View.VISIBLE);
 							}
@@ -217,6 +226,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			//Intent intent = new Intent(this, ETDPService.class);
 			//intent.putExtra("Source", "MainActivity");
 			//startService(intent);
+			mProgress.setMessage(getString(R.string.msg_updating_location));
+			mProgress.show();
+
 			startTime = System.currentTimeMillis();
 			isMonitoring = true;
 
@@ -235,6 +247,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			//Intent intent = new Intent(this, ETDPService.class);
 			//intent.putExtra("Source", "MainActivity");
 			//stopService(intent);
+			mProgress.setMessage(getString(R.string.msg_updating_location));
+			mProgress.show();
+
 			mTimerText.setVisibility(View.INVISIBLE);
 			endTime = System.currentTimeMillis();
 			isMonitoring = false;
@@ -259,7 +274,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			} catch (Exception e) {
 				// uh oh. GPS is probably off
 				e.printStackTrace();
-				Toast.makeText(this, "Cannot request location. Please check if the GPS Setting is on.", Toast.LENGTH_LONG).show();
+				Toast.makeText(this, R.string.msg_location_request_failed, Toast.LENGTH_LONG).show();
 			}
 		}
 		return false;
@@ -274,7 +289,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				e.printStackTrace();
 				Toast.makeText(
 						this,
-						"Cannot request location. Please check if the GPS Setting is on.",
+						R.string.msg_location_request_failed,
 						Toast.LENGTH_LONG
 				).show();
 			}
@@ -288,6 +303,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	}
 
 	private void saveLocations(Location location) {
+		mProgress.hide();
 		String state;
 		if (location == null) {
 			Toast.makeText(this, "Location: " + "NULL", Toast.LENGTH_LONG).show();
@@ -309,17 +325,53 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				endLocation = location;
 				state = "end: ";
 				editor.putString(END_LOCATION, jsonLocation);
+				if (endLocation != null)
+					fetchDistanceMatrix();
 			} else {
 				state = "Current: ";
 			}
 		}
 		editor.apply();
-
 		Toast.makeText(
 				this,
 				state + location.toString(),
 				Toast.LENGTH_LONG
 		).show();
+	}
+
+	private void fetchDistanceMatrix() {
+		mProgress.setMessage(getString(R.string.msg_calling_DM_API));
+		new AsyncTask<Void, Void, DistanceMatrix>() {
+			@Override
+			protected void onPreExecute() {
+				mProgress.show();
+			}
+
+			@Override
+			protected DistanceMatrix doInBackground(Void... params) {
+				return DistanceMatrix.fetch(startLocation, endLocation);
+			}
+
+			@Override
+			protected void onPostExecute(DistanceMatrix distanceMatrix) {
+				mProgress.hide();
+				if (distanceMatrix == null) {
+					Toast.makeText(GeoLocationActivity.this, R.string.msg_no_results, Toast.LENGTH_SHORT).show();
+					return;
+				}
+				try {
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.toString());
+				} catch (Exception e) {
+					Log.e(TAG, "onPostExecute: " + e.toString());
+				}
+			}
+
+			@Override
+			protected void onCancelled() {
+				mProgress.hide();
+				Toast.makeText(GeoLocationActivity.this, R.string.msg_api_request_canceled, Toast.LENGTH_SHORT).show();
+			}
+		}.execute();
 	}
 
 	/**
@@ -380,7 +432,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 	@Override
 	public void onPermissionsDenied(int requestCode, List<String> perms) {
-
+		Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
 	}
 
 	@Override
@@ -392,7 +444,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 	private void buildAlertMessageNoGps() {
 		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage("Please turn your GPS on.")
+		builder.setMessage(getString(R.string.msg_turn_gps_on))
 				.setCancelable(false)
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					public void onClick(final DialogInterface dialog, final int id) {
@@ -416,7 +468,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		}
 		EasyPermissions.requestPermissions(
 				this,
-				"This app needs to access your location",
+				getString(R.string.msg_location_access_required),
 				REQUEST_PERMISSION_ACCESS_FINE_LOCATION,
 				Manifest.permission.ACCESS_FINE_LOCATION
 		);
