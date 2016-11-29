@@ -16,26 +16,22 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.Locale;
 
-public class DistanceMatrix {
+public class DistanceMatrix extends JsonConverter {
 	private static final String DM_API_KEY = BuildConfig.DM_API_KEY;
 	private static final String URL = "https://maps.googleapis.com/maps/api/distancematrix/json";
 	private static String unit = "metric";
 
-	@SerializedName("destination_addresses") public List<String> destinationAddresses;
-	@SerializedName("origin_addresses") public List<String> originAddresses;
-	@SerializedName("rows") public List<Rows> rows;
-	@SerializedName("status") public String status;
+	@SerializedName("destination_addresses")
+	private List<String> destinationAddresses;
+	@SerializedName("origin_addresses")
+	private List<String> originAddresses;
+	@SerializedName("rows")
+	private List<Row> rows;
+	@SerializedName("status")
+	private String status;
 
 	public static DistanceMatrix fromJson(String s) {
 		return new Gson().fromJson(s, DistanceMatrix.class);
-	}
-
-	public String toJson() {
-		return new Gson().toJson(this);
-	}
-
-	public String toString() {
-		return toJson();
 	}
 
 	public static DistanceMatrix fetch(Location startLocation, Location endLocation) {
@@ -51,10 +47,9 @@ public class DistanceMatrix {
 				endLocation.getLatitude(),
 				endLocation.getLongitude()
 		);
-		Log.d("DistanceMatrix:", "fetch: ("+origin +") ("+ destination+")");
+		Log.d("DistanceMatrix:", "fetch: (" + origin + ") -> (" + destination + ")");
 		return fetch(origin, destination);
 	}
-
 
 	public static DistanceMatrix fetch(String origin, String destination) {
 		String uri = String.format(
@@ -84,7 +79,6 @@ public class DistanceMatrix {
 		return null;
 	}
 
-
 	public static void setUnitToMetric() {
 		DistanceMatrix.unit = "metric";
 	}
@@ -92,20 +86,70 @@ public class DistanceMatrix {
 	public static void setUnitToImperial() {
 		DistanceMatrix.unit = "imperial";
 	}
-}
 
-class Rows {
-	public List<Elements> elements;
-}
+	public String getStatus() {
+		return status;
+	}
 
-class Elements {
-	public TextAndValue distance;
-	public TextAndValue duration;
-	public String status;
+	public List<Row> getRows() {
+		return rows;
+	}
 
-}
+	public List<String> getOriginAddresses() {
+		return originAddresses;
+	}
 
-class TextAndValue {
-	public String text;
-	public String value;
+	public List<String> getDestinationAddresses() {
+		return destinationAddresses;
+	}
+
+
+	public class Row extends JsonConverter {
+		private List<Element> elements;
+
+		public List<Element> getElements() {
+			return elements;
+		}
+
+
+		public class Element extends JsonConverter {
+			private Distance distance;
+			private Duration duration;
+			private String status;
+
+			public Distance getDistance() {
+				return distance;
+			}
+
+			public Duration getDuration() {
+				return duration;
+			}
+
+			public String getStatus() {
+				return status;
+			}
+
+
+			public class Distance extends TextValue {
+			}
+
+
+			public class Duration extends TextValue {
+			}
+
+
+			class TextValue extends JsonConverter {
+				private String text;
+				private long value;
+
+				public String getText() {
+					return text;
+				}
+
+				public long getValue() {
+					return value;
+				}
+			}
+		}
+	}
 }

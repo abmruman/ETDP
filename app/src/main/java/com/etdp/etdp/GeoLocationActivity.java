@@ -360,7 +360,27 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 					return;
 				}
 				try {
+					Toast.makeText(GeoLocationActivity.this, "API Status: " + distanceMatrix.getStatus(), Toast.LENGTH_SHORT).show();
+
+					//Examples for accessing DistanceMatrix Object.
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getStatus());
 					Log.d(TAG, "onPostExecute: " + distanceMatrix.toString());
+
+					List<DistanceMatrix.Row> rows = distanceMatrix.getRows();
+					Log.d(TAG, "onPostExecute: " + rows.size());
+					Log.d(TAG, "onPostExecute: " + rows.toString());
+
+					List<DistanceMatrix.Row.Element> elements = rows.get(0).getElements();
+					Log.d(TAG, "onPostExecute: " + elements.toString());
+					Log.d(TAG, "onPostExecute: " + elements.get(0).getStatus());
+
+					DistanceMatrix.Row.Element.Distance distance = elements.get(0).getDistance();
+					Log.d(TAG, "onPostExecute: " + distance.toString());
+
+					DistanceMatrix.Row.Element.Duration duration = elements.get(0).getDuration();
+					Log.d(TAG, "onPostExecute: " + duration.toString());
+					Log.d(TAG, "onPostExecute: " + duration.getText());
+					Log.d(TAG, "onPostExecute: " + duration.getValue());
 				} catch (Exception e) {
 					Log.e(TAG, "onPostExecute: " + e.toString());
 				}

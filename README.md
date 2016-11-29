@@ -13,3 +13,7 @@ To be able to build this version, you need to do the following:
 
 (You can get key from [Developer Console](https://console.developers.google.com/apis/credentials) or
 [Documentation  page](https://developers.google.com/maps/documentation/distance-matrix/get-api-key#get-an-api-key)).
+
+
+## Contribute
+To contribute to this project, please follow the [AngularJS commit guidelines](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines).
