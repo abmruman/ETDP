@@ -9,6 +9,7 @@
 	<string name="msg_updating_location">Updating location…</string>
 	<string name="msg_please_wait">Please Wait…</string>
 	<string name="msg_calling_DM_API">Calling Google DistanceMatrix API…</string>
+	<string name="msg_calling_W_API">Calling Weather API…</string>
 	<string name="msg_no_results">No results, Please check your internet connection.</string>
 	<string name="msg_location_request_failed">Location update request failed.</string>
 	<string name="msg_api_request_canceled">API request cancelled</string>

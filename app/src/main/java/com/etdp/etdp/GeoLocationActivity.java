@@ -23,6 +23,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.etdp.etdp.data.DistanceMatrix;
+import com.etdp.etdp.data.Weather;
 import com.google.gson.Gson;
 
 import java.util.List;
@@ -32,8 +33,6 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
-	private final String TAG = "GeoLocationActivity";
-
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
 	private static final String COUNTER_START_TIME = "COUNTER_START_TIME";
@@ -41,9 +40,10 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private static final String IS_MONITORING = "IS_MONITORING";
 	private static final String START_LOCATION = "START_LOCATION";
 	private static final String END_LOCATION = "END_LOCATION";
-
-
+	private final String TAG = "GeoLocationActivity";
+	private final Gson gson = new Gson();
 	SharedPreferences sharedPref;
+	ProgressDialog mProgress;
 	// Acquire a reference to the system Location Manager
 	private LocationManager locationManager;
 	private Criteria criteria;
@@ -51,9 +51,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private LocationListener locationListener;
 	private ToggleButton mToggleMonitorButton;
 	private TextView mTimerText;
-	ProgressDialog mProgress;
-
-
 	private long diffTime;
 	private Location currentLocation;
 	private Location startLocation;
@@ -62,8 +59,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private Long endTime;
 	private boolean isMonitoring;
 	private Thread timerThread;
-
-	private final Gson gson = new Gson();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -320,6 +315,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			startLocation = location;
 			state = "Start: ";
 			editor.putString(START_LOCATION, jsonLocation);
+			fetchWeather();
 		} else {
 			if (startLocation != null) {
 				endLocation = location;
@@ -337,6 +333,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				state + location.toString(),
 				Toast.LENGTH_LONG
 		).show();
+
 	}
 
 	private void fetchDistanceMatrix() {
@@ -365,22 +362,67 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 					//Examples for accessing DistanceMatrix Object.
 					Log.d(TAG, "onPostExecute: " + distanceMatrix.getStatus());
 					Log.d(TAG, "onPostExecute: " + distanceMatrix.toString());
+//
+//					List<DistanceMatrix.Row> rows = distanceMatrix.getRows();
+//					Log.d(TAG, "onPostExecute: " + rows.size());
+//					Log.d(TAG, "onPostExecute: " + rows.toString());
+//
+//					List<DistanceMatrix.Row.Element> elements = rows.get(0).getElements();
+//					Log.d(TAG, "onPostExecute: " + elements.toString());
+//					Log.d(TAG, "onPostExecute: " + elements.get(0).getStatus());
+//
+//					DistanceMatrix.Row.Element.Distance distance = elements.get(0).getDistance();
+//					Log.d(TAG, "onPostExecute: " + distance.toString());
+//
+//					DistanceMatrix.Row.Element.Duration duration = elements.get(0).getDuration();
+//					Log.d(TAG, "onPostExecute: " + duration.toString());
+//					Log.d(TAG, "onPostExecute: " + duration.getText());
+//					Log.d(TAG, "onPostExecute: " + duration.getValue());
+				} catch (Exception e) {
+					Log.e(TAG, "onPostExecute: " + e.toString());
+				}
+			}
 
-					List<DistanceMatrix.Row> rows = distanceMatrix.getRows();
+			@Override
+			protected void onCancelled() {
+				mProgress.hide();
+				Toast.makeText(GeoLocationActivity.this, R.string.msg_api_request_canceled, Toast.LENGTH_SHORT).show();
+			}
+		}.execute();
+	}
+
+	private void fetchWeather() {
+		mProgress.setMessage(getString(R.string.msg_calling_W_API));
+		new AsyncTask<Void, Void, Weather>() {
+			@Override
+			protected void onPreExecute() {
+				mProgress.show();
+			}
+
+			@Override
+			protected Weather doInBackground(Void... params) {
+				return Weather.fetch(currentLocation);
+			}
+
+			@Override
+			protected void onPostExecute(Weather weather) {
+				mProgress.hide();
+				if (weather == null) {
+					Toast.makeText(GeoLocationActivity.this, R.string.msg_no_results, Toast.LENGTH_SHORT).show();
+					return;
+				}
+				try {
+					Toast.makeText(GeoLocationActivity.this, "API Status: " + weather.getStatus(), Toast.LENGTH_SHORT).show();
+
+					//Examples for accessing DistanceMatrix Object.
+					Log.d(TAG, "onPostExecute: " + weather.toString());
+
+					List<Weather.Row> rows = weather.getRows();
 					Log.d(TAG, "onPostExecute: " + rows.size());
 					Log.d(TAG, "onPostExecute: " + rows.toString());
 
-					List<DistanceMatrix.Row.Element> elements = rows.get(0).getElements();
-					Log.d(TAG, "onPostExecute: " + elements.toString());
-					Log.d(TAG, "onPostExecute: " + elements.get(0).getStatus());
-
-					DistanceMatrix.Row.Element.Distance distance = elements.get(0).getDistance();
-					Log.d(TAG, "onPostExecute: " + distance.toString());
-
-					DistanceMatrix.Row.Element.Duration duration = elements.get(0).getDuration();
-					Log.d(TAG, "onPostExecute: " + duration.toString());
-					Log.d(TAG, "onPostExecute: " + duration.getText());
-					Log.d(TAG, "onPostExecute: " + duration.getValue());
+					Log.d(TAG, "onPostExecute: " + weather.getStatus());
+					Log.d(TAG, "onPostExecute: " + weather.getTimestamp());
 				} catch (Exception e) {
 					Log.e(TAG, "onPostExecute: " + e.toString());
 				}

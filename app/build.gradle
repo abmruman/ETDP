@@ -13,7 +13,8 @@ android {
 	}
 	buildTypes {
 		applicationVariants.all { variant ->
-			variant.buildConfigField "String", "DM_API_KEY", "\""+getApiKey()+"\""
+			variant.buildConfigField "String", "DM_API_KEY", "\""+getApiKeys()['DM_API_KEY']+"\""
+			variant.buildConfigField "String", "W_API_KEY", "\""+getApiKeys()['W_API_KEY']+"\""
 		}
 		release {
 			minifyEnabled false
@@ -36,8 +37,8 @@ dependencies {
 	}
 }
 
-def getApiKey(){
+def getApiKeys(){
 	def Properties props = new Properties()
 	props.load(new FileInputStream(new File('secrets.properties')))
-	return props['DM_API_KEY']
+	return props
 }
