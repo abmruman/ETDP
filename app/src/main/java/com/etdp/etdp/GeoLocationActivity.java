@@ -35,11 +35,13 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
+	private static final int TEN_MINUTES = 1000 * 60 * 10;
 	private static final String COUNTER_START_TIME = "COUNTER_START_TIME";
 	private static final String COUNTER_END_TIME = "COUNTER_END_TIME";
 	private static final String IS_MONITORING = "IS_MONITORING";
 	private static final String START_LOCATION = "START_LOCATION";
 	private static final String END_LOCATION = "END_LOCATION";
+	private static final String WEATHER = "WEATHER";
 	private final String TAG = "GeoLocationActivity";
 	private final Gson gson = new Gson();
 	SharedPreferences sharedPref;
@@ -59,6 +61,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private Long endTime;
 	private boolean isMonitoring;
 	private Thread timerThread;
+	private Weather weather;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +84,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
 		startLocation = gson.fromJson(sharedPref.getString(START_LOCATION, null), Location.class);
 		endLocation = gson.fromJson(sharedPref.getString(END_LOCATION, null), Location.class);
+		weather = gson.fromJson(sharedPref.getString(WEATHER, null), Weather.class);
 
 		try {
 			Log.d(TAG, "onCreate: StartLocation: " + startLocation.toString());
@@ -315,7 +319,15 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			startLocation = location;
 			state = "Start: ";
 			editor.putString(START_LOCATION, jsonLocation);
-			fetchWeather();
+
+			long diff = 0;
+			if (weather == null || (diff = System.currentTimeMillis() / 1000 - weather.getTimestamp()) >= TEN_MINUTES) {
+				Log.d(TAG, "saveLocations: Time: " + diff);
+				fetchWeather();
+			} else {
+				Toast.makeText(GeoLocationActivity.this, "Weather is up-to-date: " + weather.getRows().get(0).getCondition(), Toast.LENGTH_SHORT).show();
+				Log.d(TAG, "saveLocations: Weather is up-to-date(" + weather.getRows().get(0).getCondition() + ")");
+			}
 		} else {
 			if (startLocation != null) {
 				endLocation = location;
@@ -405,26 +417,35 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			}
 
 			@Override
-			protected void onPostExecute(Weather weather) {
+			protected void onPostExecute(Weather w) {
 				mProgress.hide();
-				if (weather == null) {
+				if (w == null) {
 					Toast.makeText(GeoLocationActivity.this, R.string.msg_no_results, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				try {
-					Toast.makeText(GeoLocationActivity.this, "API Status: " + weather.getStatus(), Toast.LENGTH_SHORT).show();
+					if (w.getStatus() == 200) {
+						weather = w;
+						Log.d(TAG, "onPostExecute: Updated weather: " + weather.getRows().get(0).getCondition());
+						Toast.makeText(GeoLocationActivity.this, "Updated weather: " + weather.getRows().get(0).getCondition(), Toast.LENGTH_SHORT).show();
+						SharedPreferences.Editor editor = sharedPref.edit();
+						editor.putString(WEATHER, weather.toString());
+						editor.apply();
+						//Examples for accessing DistanceMatrix Object.
+						Log.d(TAG, "onPostExecute: " + w.toString());
+//
+//						List<Weather.Row> rows = w.getRows();
+//						Log.d(TAG, "onPostExecute: " + rows.size());
+//						Log.d(TAG, "onPostExecute: " + rows.toString());
+//
+//						Log.d(TAG, "onPostExecute: " + w.getStatus());
+//						Log.d(TAG, "onPostExecute: " + w.getTimestamp());
+					} else {
+						Toast.makeText(GeoLocationActivity.this, R.string.msg_invalid_weather_response, Toast.LENGTH_SHORT).show();
+					}
 
-					//Examples for accessing DistanceMatrix Object.
-					Log.d(TAG, "onPostExecute: " + weather.toString());
-
-					List<Weather.Row> rows = weather.getRows();
-					Log.d(TAG, "onPostExecute: " + rows.size());
-					Log.d(TAG, "onPostExecute: " + rows.toString());
-
-					Log.d(TAG, "onPostExecute: " + weather.getStatus());
-					Log.d(TAG, "onPostExecute: " + weather.getTimestamp());
 				} catch (Exception e) {
-					Log.e(TAG, "onPostExecute: " + e.toString());
+					Log.e(TAG, "onPostExecute: ", e);
 				}
 			}
 

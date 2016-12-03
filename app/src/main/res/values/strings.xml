@@ -15,4 +15,5 @@
 	<string name="msg_api_request_canceled">API request cancelled</string>
 	<string name="msg_turn_gps_on">Please turn your GPS on.</string>
 	<string name="msg_location_access_required">This app needs to access your location.</string>
+	<string name="msg_invalid_weather_response">Invalid weather response</string>
 </resources>
