@@ -42,6 +42,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private static final String START_LOCATION = "START_LOCATION";
 	private static final String END_LOCATION = "END_LOCATION";
 	private static final String WEATHER = "WEATHER";
+	private static final String DISTANCE_MATRIX = "DISTANCE_MATRIX";
+
 	private final String TAG = "GeoLocationActivity";
 	private final Gson gson = new Gson();
 	SharedPreferences sharedPref;
@@ -62,6 +64,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private boolean isMonitoring;
 	private Thread timerThread;
 	private Weather weather;
+	private DistanceMatrix distanceMatrix;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +88,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		startLocation = gson.fromJson(sharedPref.getString(START_LOCATION, null), Location.class);
 		endLocation = gson.fromJson(sharedPref.getString(END_LOCATION, null), Location.class);
 		weather = gson.fromJson(sharedPref.getString(WEATHER, null), Weather.class);
+		distanceMatrix = gson.fromJson(sharedPref.getString(DISTANCE_MATRIX, null), DistanceMatrix.class);
 
 		try {
 			Log.d(TAG, "onCreate: StartLocation: " + startLocation.toString());
@@ -362,20 +366,24 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			}
 
 			@Override
-			protected void onPostExecute(DistanceMatrix distanceMatrix) {
+			protected void onPostExecute(DistanceMatrix dm) {
 				mProgress.hide();
-				if (distanceMatrix == null) {
+				if (dm == null) {
 					Toast.makeText(GeoLocationActivity.this, R.string.msg_no_results, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				try {
-					Toast.makeText(GeoLocationActivity.this, "API Status: " + distanceMatrix.getStatus(), Toast.LENGTH_SHORT).show();
+					Toast.makeText(GeoLocationActivity.this, "API Status: " + dm.getStatus(), Toast.LENGTH_SHORT).show();
+
+					SharedPreferences.Editor editor = sharedPref.edit();
+					editor.putString(DISTANCE_MATRIX, dm.toString());
+					editor.apply();
 
 					//Examples for accessing DistanceMatrix Object.
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getStatus());
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.toString());
+					Log.d(TAG, "onPostExecute: " + dm.getStatus());
+					Log.d(TAG, "onPostExecute: " + dm.toString());
 //
-//					List<DistanceMatrix.Row> rows = distanceMatrix.getRows();
+//					List<DistanceMatrix.Row> rows = dm.getRows();
 //					Log.d(TAG, "onPostExecute: " + rows.size());
 //					Log.d(TAG, "onPostExecute: " + rows.toString());
 //
