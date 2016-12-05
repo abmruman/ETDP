@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.etdp.etdp.data.CustomLocation;
 import com.etdp.etdp.data.DistanceMatrix;
 import com.etdp.etdp.data.Weather;
 import com.google.gson.Gson;
@@ -350,6 +351,14 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				Toast.LENGTH_LONG
 		).show();
 
+		try {
+			CustomLocation customLocation = new CustomLocation(location);
+			Log.d(TAG, "saveLocations: customLocation: "+customLocation.toString());
+			Location tLoc = new Location(LocationManager.GPS_PROVIDER);
+			Log.d(TAG, "saveLocations: customLocation: "+tLoc.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void fetchDistanceMatrix() {
