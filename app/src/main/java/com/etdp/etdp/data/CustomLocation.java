@@ -13,6 +13,18 @@ public class CustomLocation extends JsonConverter {
 		return new Gson().fromJson(s, CustomLocation.class);
 	}
 
+	public static Location fromJsonToLocation(String s) {
+		return new Gson().fromJson(s, Location.class);
+	}
+
+	public static String toJson(Location location) {
+		return new Gson().toJson(location);
+	}
+
+	public static String toString(Location location) {
+		return toJson(location);
+	}
+
 	public CustomLocation(double mLatitude, double mLongitude) {
 		setLatitude(mLatitude);
 		setLongitude(mLongitude);

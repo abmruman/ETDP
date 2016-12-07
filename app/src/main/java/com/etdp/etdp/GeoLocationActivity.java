@@ -25,7 +25,6 @@ import android.widget.ToggleButton;
 import com.etdp.etdp.data.CustomLocation;
 import com.etdp.etdp.data.DistanceMatrix;
 import com.etdp.etdp.data.Weather;
-import com.google.gson.Gson;
 
 import java.util.List;
 import java.util.Locale;
@@ -46,7 +45,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private static final String DISTANCE_MATRIX = "DISTANCE_MATRIX";
 
 	private final String TAG = "GeoLocationActivity";
-	private final Gson gson = new Gson();
 	SharedPreferences sharedPref;
 	ProgressDialog mProgress;
 	// Acquire a reference to the system Location Manager
@@ -86,10 +84,10 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
-		startLocation = gson.fromJson(sharedPref.getString(START_LOCATION, null), Location.class);
-		endLocation = gson.fromJson(sharedPref.getString(END_LOCATION, null), Location.class);
-		weather = gson.fromJson(sharedPref.getString(WEATHER, null), Weather.class);
-		distanceMatrix = gson.fromJson(sharedPref.getString(DISTANCE_MATRIX, null), DistanceMatrix.class);
+		startLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(START_LOCATION, null));
+		endLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(END_LOCATION, null));
+		weather = Weather.fromJson(sharedPref.getString(WEATHER, null));
+		distanceMatrix = DistanceMatrix.fromJson(sharedPref.getString(DISTANCE_MATRIX, null));
 
 		try {
 			Log.d(TAG, "onCreate: StartLocation: " + startLocation.toString());
@@ -315,7 +313,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		}
 
 		currentLocation = location;
-		String jsonLocation = gson.toJson(location);
+		String jsonLocation = CustomLocation.toString(location);
 		SharedPreferences.Editor editor = sharedPref.edit();
 
 		Log.d(TAG, "saveLocations: " + jsonLocation);
@@ -382,15 +380,16 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 					return;
 				}
 				try {
-					Toast.makeText(GeoLocationActivity.this, "API Status: " + dm.getStatus(), Toast.LENGTH_SHORT).show();
+					distanceMatrix = dm;
+					Toast.makeText(GeoLocationActivity.this, "API Status: " + distanceMatrix.getStatus(), Toast.LENGTH_SHORT).show();
 
 					SharedPreferences.Editor editor = sharedPref.edit();
-					editor.putString(DISTANCE_MATRIX, dm.toString());
+					editor.putString(DISTANCE_MATRIX, distanceMatrix.toString());
 					editor.apply();
 
 					//Examples for accessing DistanceMatrix Object.
-					Log.d(TAG, "onPostExecute: " + dm.getStatus());
-					Log.d(TAG, "onPostExecute: " + dm.toString());
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getStatus());
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.toString());
 //
 //					List<DistanceMatrix.Row> rows = dm.getRows();
 //					Log.d(TAG, "onPostExecute: " + rows.size());
