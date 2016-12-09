@@ -9,6 +9,15 @@ public class CustomLocation extends JsonConverter {
 	private double mLatitude = 0.0;
 	private double mLongitude = 0.0;
 
+	public CustomLocation(double mLatitude, double mLongitude) {
+		setLatitude(mLatitude);
+		setLongitude(mLongitude);
+	}
+
+	public CustomLocation(Location location) {
+		setLocation(location);
+	}
+
 	public static CustomLocation fromJson(String s) {
 		return new Gson().fromJson(s, CustomLocation.class);
 	}
@@ -23,15 +32,6 @@ public class CustomLocation extends JsonConverter {
 
 	public static String toString(Location location) {
 		return toJson(location);
-	}
-
-	public CustomLocation(double mLatitude, double mLongitude) {
-		setLatitude(mLatitude);
-		setLongitude(mLongitude);
-	}
-
-	public CustomLocation(Location location) {
-		setLocation(location);
 	}
 
 	public double getLatitude() {
@@ -50,15 +50,15 @@ public class CustomLocation extends JsonConverter {
 		this.mLongitude = mLongitude;
 	}
 
-	public void setLocation(Location location) {
-		setLatitude(location.getLatitude());
-		setLongitude(location.getLongitude());
-	}
-
 	public Location getLocation() {
 		Location location = new Location(LocationManager.GPS_PROVIDER);
 		location.setLatitude(getLatitude());
 		location.setLongitude(getLongitude());
 		return location;
+	}
+
+	public void setLocation(Location location) {
+		setLatitude(location.getLatitude());
+		setLongitude(location.getLongitude());
 	}
 }

@@ -52,16 +52,18 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private Criteria criteria;
 	// Define a listener that responds to location updates
 	private LocationListener locationListener;
+
 	private ToggleButton mToggleMonitorButton;
 	private TextView mTimerText;
+
 	private long diffTime;
-	private Location currentLocation;
-	private Location startLocation;
-	private Location endLocation;
-	private Long startTime;
-	private Long endTime;
 	private boolean isMonitoring;
 	private Thread timerThread;
+	private Location currentLocation;
+	private Location originLocation;
+	private Location destLocation;
+	private Long startTime;
+	private Long endTime;
 	private Weather weather;
 	private DistanceMatrix distanceMatrix;
 
@@ -84,14 +86,14 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
-		startLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(START_LOCATION, null));
-		endLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(END_LOCATION, null));
+		originLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(START_LOCATION, null));
+		destLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(END_LOCATION, null));
 		weather = Weather.fromJson(sharedPref.getString(WEATHER, null));
 		distanceMatrix = DistanceMatrix.fromJson(sharedPref.getString(DISTANCE_MATRIX, null));
 
 		try {
-			Log.d(TAG, "onCreate: StartLocation: " + startLocation.toString());
-			Log.d(TAG, "onCreate: EndLocation: " + endLocation.toString());
+			Log.d(TAG, "onCreate: StartLocation: " + originLocation.toString());
+			Log.d(TAG, "onCreate: EndLocation: " + destLocation.toString());
 		} catch (Exception e) {
 			Log.e(TAG, "onCreate: " + e.toString());
 		}
@@ -319,7 +321,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		Log.d(TAG, "saveLocations: " + jsonLocation);
 
 		if (isMonitoring) {
-			startLocation = location;
+			originLocation = location;
 			state = "Start: ";
 			editor.putString(START_LOCATION, jsonLocation);
 
@@ -332,11 +334,11 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				Log.d(TAG, "saveLocations: Weather is up-to-date(" + weather.getRows().get(0).getCondition() + ")");
 			}
 		} else {
-			if (startLocation != null) {
-				endLocation = location;
+			if (originLocation != null) {
+				destLocation = location;
 				state = "end: ";
 				editor.putString(END_LOCATION, jsonLocation);
-				if (endLocation != null)
+				if (destLocation != null)
 					fetchDistanceMatrix();
 			} else {
 				state = "Current: ";
@@ -351,9 +353,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 		try {
 			CustomLocation customLocation = new CustomLocation(location);
-			Log.d(TAG, "saveLocations: customLocation: "+customLocation.toString());
+			Log.d(TAG, "saveLocations: customLocation: " + customLocation.toString());
 			Location tLoc = new Location(LocationManager.GPS_PROVIDER);
-			Log.d(TAG, "saveLocations: customLocation: "+tLoc.toString());
+			Log.d(TAG, "saveLocations: customLocation: " + tLoc.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -369,7 +371,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 			@Override
 			protected DistanceMatrix doInBackground(Void... params) {
-				return DistanceMatrix.fetch(startLocation, endLocation);
+				return DistanceMatrix.fetch(originLocation, destLocation);
 			}
 
 			@Override
