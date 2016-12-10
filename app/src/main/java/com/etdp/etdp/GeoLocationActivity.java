@@ -326,12 +326,16 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			editor.putString(START_LOCATION, jsonLocation);
 
 			long diff = 0;
-			if (weather == null || (diff = System.currentTimeMillis() / 1000 - weather.getTimestamp()) >= TEN_MINUTES) {
+			if (weather == null ||
+					(diff = System.currentTimeMillis() / 1000 - weather.getTimestamp()) >= TEN_MINUTES) {
 				Log.d(TAG, "saveLocations: Time: " + diff);
 				fetchWeather();
 			} else {
-				Toast.makeText(GeoLocationActivity.this, "Weather is up-to-date: " + weather.getRows().get(0).getCondition(), Toast.LENGTH_SHORT).show();
-				Log.d(TAG, "saveLocations: Weather is up-to-date(" + weather.getRows().get(0).getCondition() + ")");
+				Toast.makeText(
+						GeoLocationActivity.this,
+						"Weather is up-to-date: " + weather.getFirstCondition(),
+						Toast.LENGTH_SHORT).show();
+				Log.d(TAG, "saveLocations: Weather up-to-date(" + weather.getFirstCondition() + ")");
 			}
 		} else {
 			if (originLocation != null) {
@@ -392,22 +396,17 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 					//Examples for accessing DistanceMatrix Object.
 					Log.d(TAG, "onPostExecute: " + distanceMatrix.getStatus());
 					Log.d(TAG, "onPostExecute: " + distanceMatrix.toString());
-//
-//					List<DistanceMatrix.Row> rows = dm.getRows();
-//					Log.d(TAG, "onPostExecute: " + rows.size());
-//					Log.d(TAG, "onPostExecute: " + rows.toString());
-//
-//					List<DistanceMatrix.Row.Element> elements = rows.get(0).getElements();
-//					Log.d(TAG, "onPostExecute: " + elements.toString());
-//					Log.d(TAG, "onPostExecute: " + elements.get(0).getStatus());
-//
-//					DistanceMatrix.Row.Element.Distance distance = elements.get(0).getDistance();
-//					Log.d(TAG, "onPostExecute: " + distance.toString());
-//
-//					DistanceMatrix.Row.Element.Duration duration = elements.get(0).getDuration();
-//					Log.d(TAG, "onPostExecute: " + duration.toString());
-//					Log.d(TAG, "onPostExecute: " + duration.getText());
-//					Log.d(TAG, "onPostExecute: " + duration.getValue());
+
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstOriginAddress());
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDestinationAddress());
+
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstElementStatus());
+
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDistanceValue());
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDistanceWithUnit());
+
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDurationValue());
+					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDurationWithUnit());
 				} catch (Exception e) {
 					Log.e(TAG, "onPostExecute: " + e.toString());
 				}
@@ -444,24 +443,20 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				try {
 					if (w.getStatus() == 200) {
 						weather = w;
-						Log.d(TAG, "onPostExecute: Updated weather: " + weather.getRows().get(0).getCondition());
-						Toast.makeText(GeoLocationActivity.this, "Updated weather: " + weather.getRows().get(0).getCondition(), Toast.LENGTH_SHORT).show();
+						Toast.makeText(GeoLocationActivity.this, "Updated weather: " + weather.getFirstCondition(), Toast.LENGTH_SHORT).show();
+
 						SharedPreferences.Editor editor = sharedPref.edit();
 						editor.putString(WEATHER, weather.toString());
 						editor.apply();
+
 						//Examples for accessing DistanceMatrix Object.
-						Log.d(TAG, "onPostExecute: " + w.toString());
-//
-//						List<Weather.Row> rows = w.getRows();
-//						Log.d(TAG, "onPostExecute: " + rows.size());
-//						Log.d(TAG, "onPostExecute: " + rows.toString());
-//
-//						Log.d(TAG, "onPostExecute: " + w.getStatus());
-//						Log.d(TAG, "onPostExecute: " + w.getTimestamp());
+						Log.d(TAG, "onPostExecute: " + weather.toString());
+						Log.d(TAG, "onPostExecute: Updated weather: " + weather.getFirstCondition());
+						Log.d(TAG, "onPostExecute: " + weather.getStatus());
+						Log.d(TAG, "onPostExecute: " + weather.getTimestamp());
 					} else {
 						Toast.makeText(GeoLocationActivity.this, R.string.msg_invalid_weather_response, Toast.LENGTH_SHORT).show();
 					}
-
 				} catch (Exception e) {
 					Log.e(TAG, "onPostExecute: ", e);
 				}

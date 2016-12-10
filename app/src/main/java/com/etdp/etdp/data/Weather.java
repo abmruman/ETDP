@@ -74,6 +74,9 @@ public class Weather extends JsonConverter {
 		return null;
 	}
 
+	/**
+	 * Getter methods for class properties.
+	 **/
 	public int getStatus() {
 		return status;
 	}
@@ -85,6 +88,14 @@ public class Weather extends JsonConverter {
 	public List<Row> getRows() {
 		return rows;
 	}
+
+	/**
+	 * Getter methods for frequently accessed child class properties.
+	 **/
+	public String getFirstCondition() {
+		return rows.get(0).getCondition();
+	}
+
 
 	public class Row extends JsonConverter {
 		@SerializedName("id")

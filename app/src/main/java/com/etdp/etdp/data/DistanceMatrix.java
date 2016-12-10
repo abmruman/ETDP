@@ -77,6 +77,10 @@ public class DistanceMatrix extends JsonConverter {
 		}
 		return null;
 	}
+
+	/**
+	 * Getter methods for class properties.
+	 **/
 	public String getStatus() {
 		return status;
 	}
@@ -89,8 +93,39 @@ public class DistanceMatrix extends JsonConverter {
 		return originAddresses;
 	}
 
+	public String getFirstOriginAddress() {
+		return originAddresses.get(0);
+	}
+
 	public List<String> getDestinationAddresses() {
 		return destinationAddresses;
+	}
+
+	public String getFirstDestinationAddress() {
+		return destinationAddresses.get(0);
+	}
+
+	/**
+	 * Getter methods for frequently accessed child class properties.
+	 **/
+	public long getFirstDistanceValue() {
+		return this.getRows().get(0).getElements().get(0).getDistance().getValue();
+	}
+
+	public String getFirstDistanceWithUnit() {
+		return this.getRows().get(0).getElements().get(0).getDistance().getText();
+	}
+
+	public long getFirstDurationValue() {
+		return this.getRows().get(0).getElements().get(0).getDuration().getValue();
+	}
+
+	public String getFirstDurationWithUnit() {
+		return this.getRows().get(0).getElements().get(0).getDuration().getText();
+	}
+
+	public String getFirstElementStatus() {
+		return this.getRows().get(0).getElements().get(0).getStatus();
 	}
 
 
