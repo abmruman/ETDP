@@ -3,6 +3,9 @@ package com.etdp.etdp.data;
 import android.provider.BaseColumns;
 
 public final class DatabaseContract {
+	//metric or imperial, this determines the unit for api call
+	//Remember, changing this doesn't change the existing values in database
+	public static final String UNIT = "metric";
 	// If you change the database schema, you must increment the database version.
 	public static final int DATABASE_VERSION = 1;
 	public static final String DATABASE_NAME = "etdp.db";

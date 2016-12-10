@@ -19,7 +19,6 @@ import java.util.Locale;
 public class DistanceMatrix extends JsonConverter {
 	private static final String DM_API_KEY = BuildConfig.DM_API_KEY;
 	private static final String URL = "https://maps.googleapis.com/maps/api/distancematrix/json";
-	private static String unit = "metric";
 
 	@SerializedName("destination_addresses")
 	private List<String> destinationAddresses;
@@ -55,7 +54,7 @@ public class DistanceMatrix extends JsonConverter {
 		String uri = String.format(
 				"%s?units=%s&origins=%s&destinations=%s&key=%s",
 				URL,
-				unit,
+				DatabaseContract.UNIT,
 				Uri.encode(origin),
 				Uri.encode(destination),
 				DM_API_KEY
@@ -78,15 +77,6 @@ public class DistanceMatrix extends JsonConverter {
 		}
 		return null;
 	}
-
-	public static void setUnitToMetric() {
-		DistanceMatrix.unit = "metric";
-	}
-
-	public static void setUnitToImperial() {
-		DistanceMatrix.unit = "imperial";
-	}
-
 	public String getStatus() {
 		return status;
 	}

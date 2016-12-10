@@ -19,7 +19,6 @@ import java.util.Locale;
 public class Weather extends JsonConverter {
 	private static final String W_API_KEY = BuildConfig.W_API_KEY;
 	private static final String URL = "http://api.openweathermap.org/data/2.5/weather";
-	private static String unit = "metric";
 
 	@SerializedName("weather")
 	private List<Row> rows;
@@ -51,7 +50,7 @@ public class Weather extends JsonConverter {
 		String uri = String.format(
 				"%s?units=%s&lat=%s&lon=%s&appid=%s",
 				URL,
-				unit,
+				DatabaseContract.UNIT,
 				Uri.encode(lat),
 				Uri.encode(lon),
 				W_API_KEY
@@ -73,14 +72,6 @@ public class Weather extends JsonConverter {
 			Log.e("Weather: ", "fetch: " + e.toString());
 		}
 		return null;
-	}
-
-	public static void setUnitToMetric() {
-		Weather.unit = "metric";
-	}
-
-	public static void setUnitToImperial() {
-		Weather.unit = "imperial";
 	}
 
 	public int getStatus() {
