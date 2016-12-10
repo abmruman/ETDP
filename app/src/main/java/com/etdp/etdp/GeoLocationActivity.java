@@ -23,7 +23,9 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.etdp.etdp.data.CustomLocation;
+import com.etdp.etdp.data.DatabaseHelper;
 import com.etdp.etdp.data.DistanceMatrix;
+import com.etdp.etdp.data.TravelLog;
 import com.etdp.etdp.data.Weather;
 
 import java.util.List;
@@ -324,7 +326,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			originLocation = location;
 			state = "Start: ";
 			editor.putString(START_LOCATION, jsonLocation);
-
+			editor.apply();
 			long diff = 0;
 			if (weather == null ||
 					(diff = System.currentTimeMillis() / 1000 - weather.getTimestamp()) >= TEN_MINUTES) {
@@ -342,27 +344,33 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				destLocation = location;
 				state = "end: ";
 				editor.putString(END_LOCATION, jsonLocation);
+				editor.apply();
 				if (destLocation != null)
 					fetchDistanceMatrix();
+
+				if (endTime - startTime < TWO_MINUTES) {
+					buildAlertMessageSaveData();
+				} else {
+					saveData();
+				}
 			} else {
 				state = "Current: ";
 			}
 		}
-		editor.apply();
 		Toast.makeText(
 				this,
 				state + location.toString(),
 				Toast.LENGTH_LONG
 		).show();
-
-		try {
-			CustomLocation customLocation = new CustomLocation(location);
-			Log.d(TAG, "saveLocations: customLocation: " + customLocation.toString());
-			Location tLoc = new Location(LocationManager.GPS_PROVIDER);
-			Log.d(TAG, "saveLocations: customLocation: " + tLoc.toString());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//
+//		try {
+//			CustomLocation customLocation = new CustomLocation(location);
+//			Log.d(TAG, "saveLocations: customLocation: " + customLocation.toString());
+//			Location tLoc = new Location(LocationManager.GPS_PROVIDER);
+//			Log.d(TAG, "saveLocations: customLocation: " + tLoc.toString());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	private void fetchDistanceMatrix() {
@@ -549,6 +557,91 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				});
 		final AlertDialog alert = builder.create();
 		alert.show();
+	}
+
+	private void buildAlertMessageSaveData() {
+		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("The travel time is less than 2 min, do you want to save?")
+				.setCancelable(false)
+				.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+					public void onClick(final DialogInterface dialog, final int id) {
+						saveData();
+					}
+				})
+				.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+					public void onClick(final DialogInterface dialog, final int id) {
+						removeData();
+					}
+				});
+		final AlertDialog alert = builder.create();
+		alert.show();
+	}
+
+	private void removeData() {
+		startTime = 0L;
+		endTime = 0L;
+		diffTime = 0L;
+		currentLocation = null;
+		originLocation = null;
+		destLocation = null;
+		distanceMatrix = null;
+
+		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.remove(COUNTER_START_TIME);
+		editor.remove(COUNTER_END_TIME);
+		editor.remove(START_LOCATION);
+		editor.remove(END_LOCATION);
+		editor.remove(DISTANCE_MATRIX);
+		editor.apply();
+	}
+
+	private void saveData() {
+		new AsyncTask<Void, Void, Long>() {
+			@Override
+			protected void onPreExecute() {
+				mProgress.setMessage("Saving Travel data...");
+				mProgress.show();
+			}
+
+			@Override
+			protected Long doInBackground(Void... params) {
+				Long l = -1L;
+				int i = 3;
+				try {
+					while (l < 0 && i > 0) {
+						Thread.sleep(5000);
+						DatabaseHelper dbHelper = DatabaseHelper.getDbHelper(getApplicationContext());
+						TravelLog travelLog =
+								new TravelLog(
+										dbHelper,
+										originLocation,
+										destLocation,
+										distanceMatrix,
+										weather,
+										startTime,
+										endTime
+								);
+						l = travelLog.saveData();
+						i--;
+
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return l;
+			}
+
+			@Override
+			protected void onPostExecute(Long l) {
+				mProgress.hide();
+				if (l > -1) {
+					Toast.makeText(GeoLocationActivity.this, "Data saved successfully.", Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(GeoLocationActivity.this, "Data could not be saved.", Toast.LENGTH_SHORT).show();
+				}
+				Log.d(TAG, "saveData: Database: " + l);
+			}
+		}.execute();
 	}
 
 	public void statusCheck() {
