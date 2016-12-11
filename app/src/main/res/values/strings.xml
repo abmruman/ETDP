@@ -6,6 +6,9 @@
 	<string name="text_timer_default">0:00</string>
 	<string name="text_predict">Predict ETD (Estimated Time of Departure)</string>
 	<string name="text_predict_time">Predict Time</string>
+	<string name="text_prediction">Prediction</string>
+	<string name="text_destination">Destination</string>
+	<string name="text_start_point">Origin</string>
 	<string name="msg_updating_location">Updating location…</string>
 	<string name="msg_please_wait">Please Wait…</string>
 	<string name="msg_calling_DM_API">Calling Google DistanceMatrix API…</string>

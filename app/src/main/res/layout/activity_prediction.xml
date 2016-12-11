@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/activity_geo_location"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:layout_margin="16dp"
+	android:orientation="vertical"
+	android:paddingBottom="@dimen/activity_vertical_margin"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:paddingRight="@dimen/activity_horizontal_margin"
+	android:paddingTop="@dimen/activity_vertical_margin"
+	tools:context="com.etdp.etdp.PredictionActivity">
+	<TextView
+		android:id="@+id/textViewMonitor"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:fontFamily="sans-serif"
+		android:text="@string/text_prediction"
+		android:textAppearance="@style/TextAppearance.AppCompat"
+		android:textSize="24sp"
+		android:gravity="center"
+		android:typeface="monospace"/>
+
+	<Space
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_margin="10dp"/>
+
+	<AutoCompleteTextView
+		android:id="@+id/startPoint"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:hint="@string/text_start_point"
+		android:ems="10"/>
+
+	<Space
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_margin="10dp"/>
+
+	<AutoCompleteTextView
+		android:id="@+id/destination"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:hint="@string/text_destination"
+		android:ems="10"/>
+
+	<Space
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_margin="10dp"/>
+
+	<Button
+		android:id="@+id/getPredictionButton"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/text_predict_time"/>
+</LinearLayout>
