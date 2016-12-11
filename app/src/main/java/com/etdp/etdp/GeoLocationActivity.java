@@ -39,6 +39,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	protected static final String COUNTER_START_TIME = "COUNTER_START_TIME";
 	protected static final String COUNTER_END_TIME = "COUNTER_END_TIME";
 	protected static final String IS_MONITORING = "IS_MONITORING";
+	protected static final String CURRENT_LOCATION = "CURRENT_LOCATION";
 	protected static final String ORIGIN_LOCATION = "ORIGIN_LOCATION";
 	protected static final String DEST_LOCATION = "DEST_LOCATION";
 	protected static final String WEATHER = "WEATHER";
@@ -71,6 +72,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	private Long endTime;
 	private Weather weather;
 	private DistanceMatrix distanceMatrix;
+	private boolean isCurrentLocationUpdateOnly;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +95,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
+		currentLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(CURRENT_LOCATION, null));
 		originLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(ORIGIN_LOCATION, null));
 		destLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(DEST_LOCATION, null));
 		weather = Weather.fromJson(sharedPref.getString(WEATHER, null));
@@ -230,6 +233,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			}
 		});
 		timerThread.start();
+
+		isCurrentLocationUpdateOnly = true;
+		requestSingleLocationUpdate();
 	}
 
 	@Override
@@ -333,6 +339,12 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		String jsonLocation = CustomLocation.toString(location);
 		SharedPreferences.Editor editor = sharedPref.edit();
 
+		if(isCurrentLocationUpdateOnly){
+			editor.putString(CURRENT_LOCATION, jsonLocation);
+			editor.apply();
+			isCurrentLocationUpdateOnly = false;
+			return;
+		}
 		Log.d(TAG, "saveLocations: " + jsonLocation);
 
 		if (isMonitoring) {
@@ -544,7 +556,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 	@Override
 	public void onPermissionsGranted(int requestCode, List<String> perms) {
-//		requestSingleLocationUpdate();
+		if(isCurrentLocationUpdateOnly)
+			requestSingleLocationUpdate();
 	}
 
 	@Override
