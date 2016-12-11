@@ -84,12 +84,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 		mTimerText = (TextView) findViewById(R.id.textViewTimer);
 		mToggleMonitorButton = (ToggleButton) findViewById(R.id.buttonMonitor);
-		/* Initialization of mPredictTimeButton */
-		mPredictTimeButton = (Button) findViewById(R.id.predictButton);
+
 		/***
-		 *
 		 * Shared Preference for temporary data.
-		 *
 		 ***/
 		sharedPref = getPreferences(Context.MODE_PRIVATE);
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
@@ -101,31 +98,14 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		weather = Weather.fromJson(sharedPref.getString(WEATHER, null));
 		distanceMatrix = DistanceMatrix.fromJson(sharedPref.getString(DISTANCE_MATRIX, null));
 
-		try {
-			Log.d(TAG, "onCreate: StartLocation: " + originLocation.toString());
-			Log.d(TAG, "onCreate: EndLocation: " + destLocation.toString());
-		} catch (Exception e) {
-			Log.e(TAG, "onCreate: " + e.toString());
-		}
 		/***
-		 *
 		 * Sets Button state & ClickListener
-		 *
 		 ***/
 		if (isMonitoring) {
 			mToggleMonitorButton.setChecked(true);
 		} else {
 			mToggleMonitorButton.setChecked(false);
 		}
-
-		/* Implementation of mPredictTimeButton */
-		mPredictTimeButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Intent intent = new Intent(GeoLocationActivity.this, PredictionActivity.class);
-				startActivity(intent);
-			}
-		});
 		mToggleMonitorButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -142,23 +122,26 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				}
 			}
 		});
-		/***
-		 *
-		 * Calls Location API
-		 *
-		 ***/
-		// Register the listener with the Location Manager to receive location updates
-		/*** Location Manager & Listener ***/
-		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
+		/***
+		 * Implementation of mPredictTimeButton
+		 ***/
+		mPredictTimeButton = (Button) findViewById(R.id.predictButton);
+		mPredictTimeButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent intent = new Intent(GeoLocationActivity.this, PredictionActivity.class);
+				startActivity(intent);
+			}
+		});
+
+		/***
+		 * Calls Location API
+		 ***/
+		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 		/*** System will choose a provider according to this Criteria  ***/
 		criteria = new Criteria();
 		criteria.setAccuracy(Criteria.ACCURACY_FINE);
-//		criteria.setBearingRequired(true);
-//		criteria.setBearingAccuracy(Criteria.ACCURACY_HIGH);
-// 		criteria.setSpeedRequired(true);
-//		criteria.setSpeedAccuracy(Criteria.ACCURACY_HIGH);
-
 		/*** use Network location data: ***/
 		//locationProvider = LocationManager.NETWORK_PROVIDER;
 		/*** Or, use GPS location data: ***/
@@ -167,12 +150,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		locationListener = new LocationListener() {
 			@Override
 			public void onLocationChanged(Location location) {
-				// Called when a new location is found by the network location provider.
-				Toast.makeText(
-						GeoLocationActivity.this,
-						"onLocationChanged",
-						Toast.LENGTH_SHORT
-				).show();
 				if (isBetterLocation(location, currentLocation))
 					saveLocations(location);
 			}
@@ -299,7 +276,11 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			} catch (Exception e) {
 				// uh oh. GPS is probably off
 				e.printStackTrace();
-				Toast.makeText(this, R.string.msg_location_request_failed, Toast.LENGTH_LONG).show();
+				Toast.makeText(
+						GeoLocationActivity.this,
+						getString(R.string.msg_location_request_failed),
+						Toast.LENGTH_LONG
+				).show();
 			}
 		}
 		return false;
@@ -310,11 +291,10 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			try {
 				locationManager.requestLocationUpdates(15000, 0, criteria, locationListener, null);
 			} catch (Exception e) {
-				// uh oh. GPS is probably off
 				e.printStackTrace();
 				Toast.makeText(
 						this,
-						R.string.msg_location_request_failed,
+						getString(R.string.msg_location_request_failed),
 						Toast.LENGTH_LONG
 				).show();
 			}
@@ -329,9 +309,12 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 	private void saveLocations(Location location) {
 		mProgress.hide();
-		String state;
 		if (location == null) {
-			Toast.makeText(this, "Location: " + "NULL", Toast.LENGTH_LONG).show();
+			Toast.makeText(
+					GeoLocationActivity.this,
+					getString(R.string.msg_invalid_location),
+					Toast.LENGTH_LONG
+			).show();
 			return;
 		}
 
@@ -339,70 +322,51 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		String jsonLocation = CustomLocation.toString(location);
 		SharedPreferences.Editor editor = sharedPref.edit();
 
-		if(isCurrentLocationUpdateOnly){
+		if (isCurrentLocationUpdateOnly) {
 			editor.putString(CURRENT_LOCATION, jsonLocation);
 			editor.apply();
 			isCurrentLocationUpdateOnly = false;
+			Toast.makeText(
+					GeoLocationActivity.this,
+					getString(R.string.msg_updated_location),
+					Toast.LENGTH_SHORT
+			).show();
 			return;
 		}
-		Log.d(TAG, "saveLocations: " + jsonLocation);
 
 		if (isMonitoring) {
 			originLocation = location;
-			state = "Start: ";
 			editor.putString(ORIGIN_LOCATION, jsonLocation);
 			editor.apply();
-			long diff = 0;
-			if (weather == null ||
-					(diff = System.currentTimeMillis() / 1000 - weather.getTimestamp()) >= TEN_MINUTES) {
-				Log.d(TAG, "saveLocations: Time: " + diff);
-				fetchWeather();
-			} else {
-				Toast.makeText(
-						GeoLocationActivity.this,
-						"Weather is up-to-date: " + weather.getFirstCondition(),
-						Toast.LENGTH_SHORT).show();
-				Log.d(TAG, "saveLocations: Weather up-to-date(" + weather.getFirstCondition() + ")");
-			}
+
+			fetchWeather();
 		} else {
 			if (originLocation != null) {
 				destLocation = location;
-				state = "end: ";
 				editor.putString(DEST_LOCATION, jsonLocation);
 				editor.apply();
-				if (destLocation != null)
-					fetchDistanceMatrix();
+
+				fetchDistanceMatrix();
 
 				if (endTime - startTime < TWO_MINUTES) {
 					buildAlertMessageSaveData();
 				} else {
 					saveData();
 				}
-			} else {
-				state = "Current: ";
 			}
 		}
 		Toast.makeText(
-				this,
-				state + location.toString(),
-				Toast.LENGTH_LONG
+				GeoLocationActivity.this,
+				getString(R.string.msg_updated_location),
+				Toast.LENGTH_SHORT
 		).show();
-//
-//		try {
-//			CustomLocation customLocation = new CustomLocation(location);
-//			Log.d(TAG, "saveLocations: customLocation: " + customLocation.toString());
-//			Location tLoc = new Location(LocationManager.GPS_PROVIDER);
-//			Log.d(TAG, "saveLocations: customLocation: " + tLoc.toString());
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	private void fetchDistanceMatrix() {
-		mProgress.setMessage(getString(R.string.msg_calling_DM_API));
 		new AsyncTask<Void, Void, DistanceMatrix>() {
 			@Override
 			protected void onPreExecute() {
+				mProgress.setMessage(getString(R.string.msg_calling_DM_API));
 				mProgress.show();
 			}
 
@@ -415,31 +379,19 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			protected void onPostExecute(DistanceMatrix dm) {
 				mProgress.hide();
 				if (dm == null) {
-					Toast.makeText(GeoLocationActivity.this, R.string.msg_no_results, Toast.LENGTH_SHORT).show();
+					Toast.makeText(
+							GeoLocationActivity.this,
+							getString(R.string.msg_no_results),
+							Toast.LENGTH_SHORT
+					).show();
 					return;
 				}
 				try {
 					distanceMatrix = dm;
-					Toast.makeText(GeoLocationActivity.this, "API Status: " + distanceMatrix.getStatus(), Toast.LENGTH_SHORT).show();
 
 					SharedPreferences.Editor editor = sharedPref.edit();
 					editor.putString(DISTANCE_MATRIX, distanceMatrix.toString());
 					editor.apply();
-
-					//Examples for accessing DistanceMatrix Object.
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getStatus());
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.toString());
-
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstOriginAddress());
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDestinationAddress());
-
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstElementStatus());
-
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDistanceValue());
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDistanceWithUnit());
-
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDurationValue());
-					Log.d(TAG, "onPostExecute: " + distanceMatrix.getFirstDurationWithUnit());
 				} catch (Exception e) {
 					Log.e(TAG, "onPostExecute: " + e.toString());
 				}
@@ -448,67 +400,85 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			@Override
 			protected void onCancelled() {
 				mProgress.hide();
-				Toast.makeText(GeoLocationActivity.this, R.string.msg_api_request_canceled, Toast.LENGTH_SHORT).show();
+				Toast.makeText(
+						GeoLocationActivity.this,
+						getString(R.string.msg_api_request_canceled),
+						Toast.LENGTH_SHORT
+				).show();
 			}
 		}.execute();
 	}
 
 	private void fetchWeather() {
-		mProgress.setMessage(getString(R.string.msg_calling_W_API));
-		new AsyncTask<Void, Void, Weather>() {
-			@Override
-			protected void onPreExecute() {
-				mProgress.show();
-			}
+		if (weather == null ||
+				(System.currentTimeMillis() / 1000 - weather.getTimestamp()) >= TEN_MINUTES) {
 
-			@Override
-			protected Weather doInBackground(Void... params) {
-				return Weather.fetch(currentLocation);
-			}
-
-			@Override
-			protected void onPostExecute(Weather w) {
-				mProgress.hide();
-				if (w == null) {
-					Toast.makeText(GeoLocationActivity.this, R.string.msg_no_results, Toast.LENGTH_SHORT).show();
-					return;
+			new AsyncTask<Void, Void, Weather>() {
+				@Override
+				protected void onPreExecute() {
+					mProgress.setMessage(getString(R.string.msg_calling_W_API));
+					mProgress.show();
 				}
-				try {
-					if (w.getStatus() == 200) {
-						weather = w;
-						Toast.makeText(GeoLocationActivity.this, "Updated weather: " + weather.getFirstCondition(), Toast.LENGTH_SHORT).show();
 
-						SharedPreferences.Editor editor = sharedPref.edit();
-						editor.putString(WEATHER, weather.toString());
-						editor.apply();
+				@Override
+				protected Weather doInBackground(Void... params) {
+					return Weather.fetch(currentLocation);
+				}
 
-						//Examples for accessing DistanceMatrix Object.
-						Log.d(TAG, "onPostExecute: " + weather.toString());
-						Log.d(TAG, "onPostExecute: Updated weather: " + weather.getFirstCondition());
-						Log.d(TAG, "onPostExecute: " + weather.getStatus());
-						Log.d(TAG, "onPostExecute: " + weather.getTimestamp());
-					} else {
-						Toast.makeText(GeoLocationActivity.this, R.string.msg_invalid_weather_response, Toast.LENGTH_SHORT).show();
+				@Override
+				protected void onPostExecute(Weather w) {
+					mProgress.hide();
+					if (w == null) {
+						Toast.makeText(
+								GeoLocationActivity.this,
+								getString(R.string.msg_no_results),
+								Toast.LENGTH_SHORT
+						).show();
+						return;
 					}
-				} catch (Exception e) {
-					Log.e(TAG, "onPostExecute: ", e);
-				}
-			}
+					try {
+						if (w.getStatus() == 200) {
+							weather = w;
+							Toast.makeText(
+									GeoLocationActivity.this,
+									getString(R.string.msg_weather) + weather.getFirstCondition(),
+									Toast.LENGTH_SHORT
+							).show();
 
-			@Override
-			protected void onCancelled() {
-				mProgress.hide();
-				Toast.makeText(GeoLocationActivity.this, R.string.msg_api_request_canceled, Toast.LENGTH_SHORT).show();
-			}
-		}.execute();
+							SharedPreferences.Editor editor = sharedPref.edit();
+							editor.putString(WEATHER, weather.toString());
+							editor.apply();
+						} else {
+							Toast.makeText(
+									GeoLocationActivity.this,
+									getString(R.string.msg_invalid_weather_response),
+									Toast.LENGTH_SHORT
+							).show();
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "onPostExecute: ", e);
+					}
+				}
+
+				@Override
+				protected void onCancelled() {
+					mProgress.hide();
+					Toast.makeText(
+							GeoLocationActivity.this,
+							getString(R.string.msg_api_request_canceled),
+							Toast.LENGTH_SHORT
+					).show();
+				}
+			}.execute();
+		} else {
+			Toast.makeText(
+					GeoLocationActivity.this,
+					getString(R.string.msg_weather) + weather.getFirstCondition(),
+					Toast.LENGTH_SHORT
+			).show();
+		}
 	}
 
-	/**
-	 * Determines whether one Location reading is better than the current Location fix
-	 *
-	 * @param location            The new Location that you want to evaluate
-	 * @param currentBestLocation The current Location fix, to which you want to compare the new one
-	 */
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
 		// A new location is always better than no location
 		if (currentBestLocation == null) return true;
@@ -544,9 +514,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 				|| (isNewer && !isSignificantlyLessAccurate && isFromSameProvider);
 	}
 
-	/**
-	 * Checks whether two providers are the same
-	 */
 	private boolean isSameProvider(String provider1, String provider2) {
 		if (provider1 == null) {
 			return provider2 == null;
@@ -556,13 +523,12 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 
 	@Override
 	public void onPermissionsGranted(int requestCode, List<String> perms) {
-		if(isCurrentLocationUpdateOnly)
+		if (isCurrentLocationUpdateOnly)
 			requestSingleLocationUpdate();
 	}
 
 	@Override
 	public void onPermissionsDenied(int requestCode, List<String> perms) {
-		Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
 	}
 
 	@Override
@@ -661,9 +627,17 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			protected void onPostExecute(Long l) {
 				mProgress.hide();
 				if (l > -1) {
-					Toast.makeText(GeoLocationActivity.this, "Data saved successfully.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(
+							GeoLocationActivity.this,
+							getString(R.string.msg_db_saved),
+							Toast.LENGTH_SHORT
+					).show();
 				} else {
-					Toast.makeText(GeoLocationActivity.this, "Data could not be saved.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(
+							GeoLocationActivity.this,
+							getString(R.string.msg_db_save_failed),
+							Toast.LENGTH_SHORT
+					).show();
 				}
 				Log.d(TAG, "saveData: Database: " + l);
 			}

@@ -19,4 +19,9 @@
 	<string name="msg_turn_gps_on">Please turn your GPS on.</string>
 	<string name="msg_location_access_required">This app needs to access your location.</string>
 	<string name="msg_invalid_weather_response">Invalid weather response</string>
+	<string name="msg_invalid_location">Invalid Location Data</string>
+	<string name="msg_updated_location">Updated Location.</string>
+	<string name="msg_weather">"Weather: "</string>
+	<string name="msg_db_saved">Data saved successfully.</string>
+	<string name="msg_db_save_failed">Error saving data.</string>
 </resources>
