@@ -29,6 +29,9 @@ public class DistanceMatrix extends JsonConverter {
 	@SerializedName("status")
 	private String status;
 
+	private DistanceMatrix() {
+	}
+
 	public static DistanceMatrix fromJson(String s) {
 		return new Gson().fromJson(s, DistanceMatrix.class);
 	}

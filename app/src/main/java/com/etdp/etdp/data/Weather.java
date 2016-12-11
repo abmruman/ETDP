@@ -27,6 +27,9 @@ public class Weather extends JsonConverter {
 	@SerializedName("dt")
 	private long timestamp;
 
+	private Weather() {
+	}
+
 	public static Weather fromJson(String s) {
 		return new Gson().fromJson(s, Weather.class);
 	}
