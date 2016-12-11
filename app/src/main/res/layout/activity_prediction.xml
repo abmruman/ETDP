@@ -17,7 +17,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:fontFamily="sans-serif"
-		android:text="@string/prediction"
+		android:text="@string/text_prediction"
 		android:textAppearance="@style/TextAppearance.AppCompat"
 		android:textSize="24sp"
 		android:gravity="center"
@@ -32,7 +32,7 @@
 		android:id="@+id/startPoint"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:hint="@string/start_point"
+		android:hint="@string/text_start_point"
 		android:ems="10"/>
 
 	<Space
@@ -44,7 +44,7 @@
 		android:id="@+id/destination"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:hint="@string/destination"
+		android:hint="@string/text_destination"
 		android:ems="10"/>
 
 	<Space
@@ -56,5 +56,5 @@
 		android:id="@+id/getPredictionButton"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="@string/predict_time"/>
+		android:text="@string/text_predict_time"/>
 </LinearLayout>
