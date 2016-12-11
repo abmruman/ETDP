@@ -321,20 +321,12 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		currentLocation = location;
 		String jsonLocation = CustomLocation.toString(location);
 		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.putString(CURRENT_LOCATION, jsonLocation);
+		editor.apply();
 
 		if (isCurrentLocationUpdateOnly) {
-			editor.putString(CURRENT_LOCATION, jsonLocation);
-			editor.apply();
 			isCurrentLocationUpdateOnly = false;
-			Toast.makeText(
-					GeoLocationActivity.this,
-					getString(R.string.msg_updated_location),
-					Toast.LENGTH_SHORT
-			).show();
-			return;
-		}
-
-		if (isMonitoring) {
+		} else if (isMonitoring) {
 			originLocation = location;
 			editor.putString(ORIGIN_LOCATION, jsonLocation);
 			editor.apply();
@@ -573,7 +565,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		startTime = 0L;
 		endTime = 0L;
 		diffTime = 0L;
-		currentLocation = null;
 		originLocation = null;
 		destLocation = null;
 		distanceMatrix = null;
@@ -632,7 +623,9 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 							getString(R.string.msg_db_saved),
 							Toast.LENGTH_SHORT
 					).show();
+					//TODO: Remove data after save.
 				} else {
+					//TODO: Handle this error.
 					Toast.makeText(
 							GeoLocationActivity.this,
 							getString(R.string.msg_db_save_failed),
