@@ -131,6 +131,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			@Override
 			public void onClick(View view) {
 				Intent intent = new Intent(GeoLocationActivity.this, PredictionActivity.class);
+				intent.putExtra(CURRENT_LOCATION, new CustomLocation(currentLocation).toJson());
 				startActivity(intent);
 			}
 		});
