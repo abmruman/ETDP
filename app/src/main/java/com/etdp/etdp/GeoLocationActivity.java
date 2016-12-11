@@ -36,17 +36,16 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class GeoLocationActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+	protected static final String COUNTER_START_TIME = "COUNTER_START_TIME";
+	protected static final String COUNTER_END_TIME = "COUNTER_END_TIME";
+	protected static final String IS_MONITORING = "IS_MONITORING";
+	protected static final String ORIGIN_LOCATION = "ORIGIN_LOCATION";
+	protected static final String DEST_LOCATION = "DEST_LOCATION";
+	protected static final String WEATHER = "WEATHER";
+	protected static final String DISTANCE_MATRIX = "DISTANCE_MATRIX";
 	static final int REQUEST_PERMISSION_ACCESS_FINE_LOCATION = 1004;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
 	private static final int TEN_MINUTES = 1000 * 60 * 10;
-	private static final String COUNTER_START_TIME = "COUNTER_START_TIME";
-	private static final String COUNTER_END_TIME = "COUNTER_END_TIME";
-	private static final String IS_MONITORING = "IS_MONITORING";
-	private static final String START_LOCATION = "START_LOCATION";
-	private static final String END_LOCATION = "END_LOCATION";
-	private static final String WEATHER = "WEATHER";
-	private static final String DISTANCE_MATRIX = "DISTANCE_MATRIX";
-
 	private final String TAG = "GeoLocationActivity";
 	SharedPreferences sharedPref;
 	ProgressDialog mProgress;
@@ -94,8 +93,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		startTime = sharedPref.getLong(COUNTER_START_TIME, 0);
 		endTime = sharedPref.getLong(COUNTER_END_TIME, 0);
 		isMonitoring = sharedPref.getBoolean(IS_MONITORING, false);
-		originLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(START_LOCATION, null));
-		destLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(END_LOCATION, null));
+		originLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(ORIGIN_LOCATION, null));
+		destLocation = CustomLocation.fromJsonToLocation(sharedPref.getString(DEST_LOCATION, null));
 		weather = Weather.fromJson(sharedPref.getString(WEATHER, null));
 		distanceMatrix = DistanceMatrix.fromJson(sharedPref.getString(DISTANCE_MATRIX, null));
 
@@ -339,7 +338,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		if (isMonitoring) {
 			originLocation = location;
 			state = "Start: ";
-			editor.putString(START_LOCATION, jsonLocation);
+			editor.putString(ORIGIN_LOCATION, jsonLocation);
 			editor.apply();
 			long diff = 0;
 			if (weather == null ||
@@ -357,7 +356,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 			if (originLocation != null) {
 				destLocation = location;
 				state = "end: ";
-				editor.putString(END_LOCATION, jsonLocation);
+				editor.putString(DEST_LOCATION, jsonLocation);
 				editor.apply();
 				if (destLocation != null)
 					fetchDistanceMatrix();
@@ -603,8 +602,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.remove(COUNTER_START_TIME);
 		editor.remove(COUNTER_END_TIME);
-		editor.remove(START_LOCATION);
-		editor.remove(END_LOCATION);
+		editor.remove(ORIGIN_LOCATION);
+		editor.remove(DEST_LOCATION);
 		editor.remove(DISTANCE_MATRIX);
 		editor.apply();
 	}
