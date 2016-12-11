@@ -624,7 +624,7 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 							getString(R.string.msg_db_saved),
 							Toast.LENGTH_SHORT
 					).show();
-					//TODO: Remove data after save.
+					removeData();
 				} else {
 					//TODO: Handle this error.
 					Toast.makeText(
