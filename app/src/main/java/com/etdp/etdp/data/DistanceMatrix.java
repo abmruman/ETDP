@@ -36,24 +36,28 @@ public class DistanceMatrix extends JsonConverter {
 		return new Gson().fromJson(s, DistanceMatrix.class);
 	}
 
-	public static DistanceMatrix fetch(Location startLocation, Location endLocation) {
+	public static DistanceMatrix fetch(Location originLocation, Location destLocation) {
+		return fetch(new CustomLocation(originLocation), new CustomLocation(destLocation));
+	}
+
+	public static DistanceMatrix fetch(CustomLocation originLocation, CustomLocation destLocation) {
 		String origin = String.format(
 				Locale.ENGLISH,
 				"%f,%f",
-				startLocation.getLatitude(),
-				startLocation.getLongitude()
+				originLocation.getLatitude(),
+				originLocation.getLongitude()
 		);
 		String destination = String.format(
 				Locale.ENGLISH,
 				"%f,%f",
-				endLocation.getLatitude(),
-				endLocation.getLongitude()
+				destLocation.getLatitude(),
+				destLocation.getLongitude()
 		);
 		Log.d("DistanceMatrix:", "fetch: (" + origin + ") -> (" + destination + ")");
 		return fetch(origin, destination);
 	}
 
-	public static DistanceMatrix fetch(String origin, String destination) {
+	private static DistanceMatrix fetch(String origin, String destination) {
 		String uri = String.format(
 				"%s?units=%s&origins=%s&destinations=%s&key=%s",
 				URL,
