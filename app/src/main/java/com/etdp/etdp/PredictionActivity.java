@@ -1,10 +1,13 @@
 package com.etdp.etdp;
 
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.etdp.etdp.data.CustomLocation;
@@ -14,9 +17,11 @@ public class PredictionActivity extends AppCompatActivity {
 	private static final String TAG = "PredictionActivity";
 	AutoCompleteTextView mStartPointAutoComplete;
 	AutoCompleteTextView mDestinationAutoComplete;
+	TextView mPredictionResult;
 	DistanceMatrix distanceMatrix;
 	CustomLocation currentLocation;
 
+	ProgressDialog mProgress;
 	String[] startPointList = {"A.B.M Tower, Dhaka, Bangladesh", "PA, United States", "Parana, Brazil",
 			"Padua, Italy", "Pasadena, CA", "K F C, 40 Kemal Ataturk Avenue, Dhaka, Bangladesh"};
 	String[] destinationList = {"Paries, France", "PA, United States", "Parana, Brazil",
@@ -26,11 +31,14 @@ public class PredictionActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_prediction);
+		mProgress = new ProgressDialog(this);
+		mPredictionResult = (TextView) findViewById(R.id.textPredictionResult);
 
 		currentLocation = CustomLocation.fromJson(
 				getIntent().getStringExtra(GeoLocationActivity.CURRENT_LOCATION)
 		);
-		fetchDistanceMatrix();
+		fetchDistanceMatrix(false);
+
 
 		mStartPointAutoComplete = (AutoCompleteTextView) findViewById(R.id.startPoint);
 		mDestinationAutoComplete = (AutoCompleteTextView) findViewById(R.id.destination);
@@ -46,6 +54,24 @@ public class PredictionActivity extends AppCompatActivity {
 
 		mStartPointAutoComplete.setAdapter(adapterStartPoint);
 		mDestinationAutoComplete.setAdapter(adapterDestination);
+
+		findViewById(R.id.getPredictionButton).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String originAddress = mStartPointAutoComplete.getText().toString();
+				String destAddress = mDestinationAutoComplete.getText().toString();
+
+				if(originAddress.isEmpty() || destAddress.isEmpty()){
+					Toast.makeText(
+							PredictionActivity.this,
+							"Please enter both addresses.",
+							Toast.LENGTH_LONG
+					).show();
+					return;
+				}
+				fetchDistanceMatrix(true);
+			}
+		});
 	}
 
 	@Override
@@ -58,10 +84,37 @@ public class PredictionActivity extends AppCompatActivity {
 		}
 	}
 
-	private void fetchDistanceMatrix() {
+	private void fetchDistanceMatrix(final boolean forPrediction) {
 		new AsyncTask<Void, Void, DistanceMatrix>() {
+			String originAddress;
+			String destAddress;
+
+			@Override
+			protected void onPreExecute() {
+				mProgress.setMessage("please wait...");
+				mProgress.show();
+				if(forPrediction){
+					originAddress = mStartPointAutoComplete.getText().toString();
+					destAddress = mDestinationAutoComplete.getText().toString();
+					if(originAddress.isEmpty() || destAddress.isEmpty()){
+						Toast.makeText(
+								PredictionActivity.this,
+								"Please enter both addresses.",
+								Toast.LENGTH_LONG
+						).show();
+
+						cancel(true);
+					}
+				}
+				mProgress.setMessage("please wait...");
+				mProgress.show();
+			}
+
 			@Override
 			protected DistanceMatrix doInBackground(Void... params) {
+				if(forPrediction){
+					return DistanceMatrix.fetch(originAddress, destAddress);
+				}
 				return DistanceMatrix.fetch(currentLocation, currentLocation);
 			}
 
@@ -79,6 +132,14 @@ public class PredictionActivity extends AppCompatActivity {
 				if(mStartPointAutoComplete.getEditableText().toString().isEmpty()){
 					mStartPointAutoComplete.setText(distanceMatrix.getFirstOriginAddress());
 				}
+
+				if(forPrediction){
+					mPredictionResult.append("Prediction Result");
+					mPredictionResult.append("\nETA: ");
+					mPredictionResult.append(distanceMatrix.getFirstDurationWithUnit());
+					mPredictionResult.append(" (from DistanceMatrix API)");
+				}
+				mProgress.hide();
 			}
 
 			@Override

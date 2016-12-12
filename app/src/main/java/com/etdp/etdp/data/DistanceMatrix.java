@@ -57,7 +57,7 @@ public class DistanceMatrix extends JsonConverter {
 		return fetch(origin, destination);
 	}
 
-	private static DistanceMatrix fetch(String origin, String destination) {
+	public static DistanceMatrix fetch(String origin, String destination) {
 		String uri = String.format(
 				"%s?units=%s&origins=%s&destinations=%s&key=%s",
 				URL,

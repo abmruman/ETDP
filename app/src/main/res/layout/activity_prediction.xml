@@ -26,7 +26,7 @@
 	<Space
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_margin="10dp"/>
+		android:layout_margin="5dp"/>
 
 	<AutoCompleteTextView
 		android:id="@+id/startPoint"
@@ -35,11 +35,6 @@
 		android:hint="@string/text_start_point"
 		android:ems="10"/>
 
-	<Space
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_margin="10dp"/>
-
 	<AutoCompleteTextView
 		android:id="@+id/destination"
 		android:layout_width="match_parent"
@@ -47,14 +42,25 @@
 		android:hint="@string/text_destination"
 		android:ems="10"/>
 
-	<Space
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_margin="10dp"/>
-
 	<Button
 		android:id="@+id/getPredictionButton"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:text="@string/text_predict_time"/>
+
+	<Space
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_margin="10dp"/>
+
+	<TextView
+		android:id="@+id/textPredictionResult"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:fontFamily="sans-serif"
+		android:textAppearance="@style/TextAppearance.AppCompat"
+		android:textSize="24sp"
+		android:gravity="start"
+		android:typeface="monospace"/>
+
 </LinearLayout>
