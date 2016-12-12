@@ -47,7 +47,8 @@ public final class DatabaseContract {
 
 		public static final String DELETE_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME;
 
-		public static final String[] COLUMN_ARRAY = {
+		public static final String[] PROJECTION = {
+				_ID,
 				COLUMN_ORIGIN_LOCATION,
 				COLUMN_DEST_LOCATION,
 				COLUMN_ORIGIN_ADDRESS,

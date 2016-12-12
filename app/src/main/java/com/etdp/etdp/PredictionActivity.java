@@ -11,7 +11,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.etdp.etdp.data.CustomLocation;
+import com.etdp.etdp.data.DatabaseContract;
+import com.etdp.etdp.data.DatabaseHelper;
 import com.etdp.etdp.data.DistanceMatrix;
+import com.etdp.etdp.data.TravelLog;
+
+import java.util.List;
 
 public class PredictionActivity extends AppCompatActivity {
 	private static final String TAG = "PredictionActivity";
@@ -22,11 +27,8 @@ public class PredictionActivity extends AppCompatActivity {
 	CustomLocation currentLocation;
 
 	ProgressDialog mProgress;
-	String[] startPointList = {"A.B.M Tower, Dhaka, Bangladesh", "PA, United States", "Parana, Brazil",
-			"Padua, Italy", "Pasadena, CA", "K F C, 40 Kemal Ataturk Avenue, Dhaka, Bangladesh"};
-	String[] destinationList = {"Paries, France", "PA, United States", "Parana, Brazil",
-			"K F C, 40 Kemal Ataturk Avenue, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Rd No 21, Dhaka 1213, Bangladesh"};
-
+	String[] startPointList = {"A.B.M Tower, Dhaka, Bangladesh", "K F C, 40 Kemal Ataturk Avenue, Dhaka, Bangladesh"};
+	String[] destinationList = {"K F C, 40 Kemal Ataturk Avenue, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Rd No 21, Dhaka 1213, Bangladesh"};
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -134,10 +136,40 @@ public class PredictionActivity extends AppCompatActivity {
 				}
 
 				if(forPrediction){
-					mPredictionResult.append("Prediction Result");
-					mPredictionResult.append("\nETA: ");
-					mPredictionResult.append(distanceMatrix.getFirstDurationWithUnit());
-					mPredictionResult.append(" (from DistanceMatrix API)");
+					StringBuilder builder = new StringBuilder();
+					builder.append("Prediction Result");
+					builder.append("\nETA: ");
+					builder.append(distanceMatrix.getFirstDurationWithUnit());
+					builder.append(" (DistanceMatrix API)");
+
+					StringBuilder where = new StringBuilder();
+					where.append(DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS)
+							.append(" LIKE ?")
+							.append(" AND ")
+							.append(DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS)
+							.append(" LIKE ?");
+
+					List<TravelLog> travelLogs = TravelLog.readData(
+							DatabaseHelper.getDbHelper(PredictionActivity.this),
+							null,
+							where.toString(),
+							new String[]{originAddress, destAddress},
+							null,
+							"10"
+					);
+					builder.append("\nPredicted time: ");
+
+					if(travelLogs.size()<1) {
+						builder.append("(Not enough data for prediction)");
+					}else{
+						long avg = 0;
+						for(int i=0; i<travelLogs.size(); i++){
+							avg += travelLogs.get(i).travelTime;
+						}
+						avg /= travelLogs.size();
+					}
+
+					mPredictionResult.setText(builder.toString());
 				}
 				mProgress.hide();
 			}
