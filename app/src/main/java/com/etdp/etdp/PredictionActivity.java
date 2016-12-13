@@ -17,6 +17,7 @@ import com.etdp.etdp.data.DistanceMatrix;
 import com.etdp.etdp.data.TravelLog;
 
 import java.util.List;
+import java.util.Locale;
 
 public class PredictionActivity extends AppCompatActivity {
 	private static final String TAG = "PredictionActivity";
@@ -27,8 +28,9 @@ public class PredictionActivity extends AppCompatActivity {
 	CustomLocation currentLocation;
 
 	ProgressDialog mProgress;
-	String[] startPointList = {"A.B.M Tower, Dhaka, Bangladesh", "K F C, 40 Kemal Ataturk Avenue, Dhaka, Bangladesh"};
-	String[] destinationList = {"K F C, 40 Kemal Ataturk Avenue, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Rd No 21, Dhaka 1213, Bangladesh"};
+	String[] startPointList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Road No 21, Dhaka 1213, Bangladesh"};
+	String[] destinationList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Road No 21, Dhaka 1213, Bangladesh"};
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -63,7 +65,7 @@ public class PredictionActivity extends AppCompatActivity {
 				String originAddress = mStartPointAutoComplete.getText().toString();
 				String destAddress = mDestinationAutoComplete.getText().toString();
 
-				if(originAddress.isEmpty() || destAddress.isEmpty()){
+				if (originAddress.isEmpty() || destAddress.isEmpty()) {
 					Toast.makeText(
 							PredictionActivity.this,
 							"Please enter both addresses.",
@@ -80,7 +82,7 @@ public class PredictionActivity extends AppCompatActivity {
 	protected void onStart() {
 		super.onStart();
 		mDestinationAutoComplete.requestFocus();
-		if(mStartPointAutoComplete.getEditableText().toString().isEmpty() && distanceMatrix != null){
+		if (mStartPointAutoComplete.getEditableText().toString().isEmpty() && distanceMatrix != null) {
 			mStartPointAutoComplete.setText(distanceMatrix.getFirstOriginAddress());
 
 		}
@@ -95,10 +97,10 @@ public class PredictionActivity extends AppCompatActivity {
 			protected void onPreExecute() {
 				mProgress.setMessage("please wait...");
 				mProgress.show();
-				if(forPrediction){
+				if (forPrediction) {
 					originAddress = mStartPointAutoComplete.getText().toString();
 					destAddress = mDestinationAutoComplete.getText().toString();
-					if(originAddress.isEmpty() || destAddress.isEmpty()){
+					if (originAddress.isEmpty() || destAddress.isEmpty()) {
 						Toast.makeText(
 								PredictionActivity.this,
 								"Please enter both addresses.",
@@ -114,7 +116,7 @@ public class PredictionActivity extends AppCompatActivity {
 
 			@Override
 			protected DistanceMatrix doInBackground(Void... params) {
-				if(forPrediction){
+				if (forPrediction) {
 					return DistanceMatrix.fetch(originAddress, destAddress);
 				}
 				return DistanceMatrix.fetch(currentLocation, currentLocation);
@@ -131,11 +133,11 @@ public class PredictionActivity extends AppCompatActivity {
 					return;
 				}
 				distanceMatrix = dm;
-				if(mStartPointAutoComplete.getEditableText().toString().isEmpty()){
+				if (mStartPointAutoComplete.getEditableText().toString().isEmpty()) {
 					mStartPointAutoComplete.setText(distanceMatrix.getFirstOriginAddress());
 				}
 
-				if(forPrediction){
+				if (forPrediction) {
 					StringBuilder builder = new StringBuilder();
 					builder.append("Prediction Result");
 					builder.append("\nETA: ");
@@ -157,16 +159,28 @@ public class PredictionActivity extends AppCompatActivity {
 							null,
 							"10"
 					);
-					builder.append("\nPredicted time: ");
 
-					if(travelLogs.size()<1) {
-						builder.append("(Not enough data for prediction)");
-					}else{
+					if (travelLogs.size() < 1) {
+						builder.append("\n\n(Not enough data for prediction)");
+					} else {
+						builder.append("\nPredicted time: ");
 						long avg = 0;
-						for(int i=0; i<travelLogs.size(); i++){
-							avg += travelLogs.get(i).travelTime;
+						for (TravelLog travelLog: travelLogs) {
+							avg += travelLog.travelTime;
 						}
 						avg /= travelLogs.size();
+
+						int seconds = (int) avg;
+						int minutes = seconds / 60;
+						seconds = seconds % 60;
+						int hours = minutes / 60;
+						minutes = minutes % 60;
+						if (hours > 0) {
+							builder.append(String.format(Locale.ENGLISH, "%d:%02d:%02d hr", hours, minutes, seconds));
+						} else {
+							builder.append(String.format(Locale.ENGLISH, "%d:%02d min", minutes, seconds));
+						}
+						builder.append(" (").append(travelLogs.size()).append(") ");
 					}
 
 					mPredictionResult.setText(builder.toString());

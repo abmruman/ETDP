@@ -12,13 +12,7 @@ import java.util.Locale;
 
 public class TravelLog {
 	public static final SimpleDateFormat dayFormat = new SimpleDateFormat("E", Locale.ENGLISH);
-	public static final SimpleDateFormat timeFormat = new SimpleDateFormat("HH00", Locale.ENGLISH);
-	private boolean readonly;
-	private DatabaseHelper dbHelper;
-	private Long startTime;
-	private Long endTime;
-	private DistanceMatrix distanceMatrix;
-
+	public static final SimpleDateFormat timeFormat = new SimpleDateFormat("H00", Locale.ENGLISH);
 	public int _id;
 	public CustomLocation originLocation;
 	public CustomLocation destLocation;
@@ -30,6 +24,11 @@ public class TravelLog {
 	public long distance;
 	public long eta;
 	public long travelTime;
+	private boolean readonly;
+	private DatabaseHelper dbHelper;
+	private Long startTime;
+	private Long endTime;
+	private DistanceMatrix distanceMatrix;
 
 	public TravelLog(
 			DatabaseHelper dbHelper,
@@ -42,7 +41,7 @@ public class TravelLog {
 			int time,
 			long distance,
 			long eta,
-			long travelTime){
+			long travelTime) {
 		this(
 				dbHelper,
 				-1,
@@ -71,8 +70,8 @@ public class TravelLog {
 			int time,
 			long distance,
 			long eta,
-			long travelTime){
-		if(_id>-1) this._id = _id;
+			long travelTime) {
+		if (_id > -1) this._id = _id;
 		this.dbHelper = dbHelper;
 		this.originLocation = originLocation;
 		this.destLocation = destLocation;
@@ -85,6 +84,7 @@ public class TravelLog {
 		this.eta = eta;
 		this.travelTime = travelTime;
 	}
+
 	/**
 	 * Instance for reading from database
 	 **/
@@ -175,25 +175,6 @@ public class TravelLog {
 		this.travelTime = (endTime - startTime) / 1000;
 	}
 
-	public long saveData() {
-		if (readonly || originLocation == null || destLocation == null || distanceMatrix == null) {
-			return -1;
-		}
-		if(dbHelper==null) return -1;
-
-		synchronized (dbHelper) {
-			// Gets the data repository in write mode
-			SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-			ContentValues values = getContentValue();
-
-			// Insert the new row, returning the primary key value of the new row
-			long newRowId = db.insert(DatabaseContract.TravelEntry.TABLE_NAME, null, values);
-			db.close();
-			return newRowId;
-		}
-	}
-
 	public static List<TravelLog> readAllData(DatabaseHelper dbHelper) {
 		return readData(dbHelper, null, null, null, null, null);
 	}
@@ -208,25 +189,25 @@ public class TravelLog {
 
 		List<TravelLog> travelLogs = new ArrayList<>();
 
-		if(dbHelper==null) return null;
+		if (dbHelper == null) return null;
 		synchronized (dbHelper) {
 			SQLiteDatabase db = dbHelper.getReadableDatabase();
-			if(select == null) select = DatabaseContract.TravelEntry.PROJECTION;
+			if (select == null) select = DatabaseContract.TravelEntry.PROJECTION;
 			Cursor cursor = db.query(
-					DatabaseContract.TravelEntry.TABLE_NAME,	// The table to query
+					DatabaseContract.TravelEntry.TABLE_NAME,
 					select,
-					where,										//The columns for the WHERE clause
-					whereArgs,									// The values for the WHERE clause
-					null,										// group the rows
-					null,										// filter by row groups
-					orderBy,									// sort order
+					where,
+					whereArgs,
+					null,
+					null,
+					orderBy,
 					limit
 			);
 			if (cursor.moveToFirst()) {
 				do {
 					TravelLog travelLog = cursorToTravelLog(dbHelper, cursor);
 					travelLogs.add(travelLog);
-				}while (cursor.moveToNext());
+				} while (cursor.moveToNext());
 			}
 			cursor.close();
 			db.close();
@@ -234,7 +215,7 @@ public class TravelLog {
 		return travelLogs;
 	}
 
-	private static TravelLog cursorToTravelLog(DatabaseHelper dbHelper, Cursor cursor) {
+	public static TravelLog cursorToTravelLog(DatabaseHelper dbHelper, Cursor cursor) {
 		return new TravelLog(
 				dbHelper,
 				CustomLocation.fromJson(cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ORIGIN_LOCATION))),
@@ -248,6 +229,25 @@ public class TravelLog {
 				cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ETA)),
 				cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_TRAVEL_TIME))
 		);
+	}
+
+	public long saveData() {
+		if (readonly || originLocation == null || destLocation == null || distanceMatrix == null) {
+			return -1;
+		}
+		if (dbHelper == null) return -1;
+
+		synchronized (dbHelper) {
+			// Gets the data repository in write mode
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+			ContentValues values = getContentValue();
+
+			// Insert the new row, returning the primary key value of the new row
+			long newRowId = db.insert(DatabaseContract.TravelEntry.TABLE_NAME, null, values);
+			db.close();
+			return newRowId;
+		}
 	}
 
 	private ContentValues getContentValue() {
