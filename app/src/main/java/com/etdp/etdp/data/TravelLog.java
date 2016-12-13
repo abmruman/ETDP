@@ -13,6 +13,7 @@ import java.util.Locale;
 public class TravelLog {
 	public static final SimpleDateFormat dayFormat = new SimpleDateFormat("E", Locale.ENGLISH);
 	public static final SimpleDateFormat timeFormat = new SimpleDateFormat("H00", Locale.ENGLISH);
+	private static final String TAG = "TravelLog";
 	public int _id;
 	public CustomLocation originLocation;
 	public CustomLocation destLocation;
@@ -187,6 +188,17 @@ public class TravelLog {
 			String orderBy,
 			String limit) {
 
+		return readData(dbHelper, false, select, where, whereArgs, orderBy, limit);
+	}
+
+	public static List<TravelLog> readData(
+			DatabaseHelper dbHelper,
+			boolean distinct,
+			String[] select,
+			String where,
+			String[] whereArgs,
+			String orderBy,
+			String limit) {
 		List<TravelLog> travelLogs = new ArrayList<>();
 
 		if (dbHelper == null) return null;
@@ -194,6 +206,7 @@ public class TravelLog {
 			SQLiteDatabase db = dbHelper.getReadableDatabase();
 			if (select == null) select = DatabaseContract.TravelEntry.PROJECTION;
 			Cursor cursor = db.query(
+					distinct,
 					DatabaseContract.TravelEntry.TABLE_NAME,
 					select,
 					where,
@@ -216,18 +229,79 @@ public class TravelLog {
 	}
 
 	public static TravelLog cursorToTravelLog(DatabaseHelper dbHelper, Cursor cursor) {
+		CustomLocation originLocation = null;
+		CustomLocation destLocation = null;
+		String originAddress = null;
+		String destAddress = null;
+		String weather = null;
+		String day = null;
+		int time = 0;
+		long distance = 0;
+		long eta = 0;
+		long travelTime = 0;
+		try {
+			originLocation = CustomLocation.fromJson(cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ORIGIN_LOCATION)));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			destLocation = CustomLocation.fromJson(cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DEST_LOCATION)));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			originAddress = cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			destAddress = cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			weather = cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_WEATHER));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			day = cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DAY));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			time = cursor.getInt(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_TIME));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			distance = cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DISTANCE));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			eta = cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ETA));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+		try {
+			travelTime = cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_TRAVEL_TIME));
+		} catch (Exception e) {
+//			Log.e(TAG, "cursorToTravelLog: " + e.toString());
+		}
+
 		return new TravelLog(
 				dbHelper,
-				CustomLocation.fromJson(cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ORIGIN_LOCATION))),
-				CustomLocation.fromJson(cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DEST_LOCATION))),
-				cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS)),
-				cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS)),
-				cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_WEATHER)),
-				cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DAY)),
-				cursor.getInt(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_TIME)),
-				cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_DISTANCE)),
-				cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ETA)),
-				cursor.getLong(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_TRAVEL_TIME))
+				originLocation,
+				destLocation,
+				originAddress,
+				destAddress,
+				weather,
+				day,
+				time,
+				distance,
+				eta,
+				travelTime
 		);
 	}
 

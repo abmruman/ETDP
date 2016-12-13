@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -28,7 +29,7 @@ public class PredictionActivity extends AppCompatActivity {
 	CustomLocation currentLocation;
 
 	ProgressDialog mProgress;
-	String[] startPointList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Road No 21, Dhaka 1213, Bangladesh"};
+	String[] originPointList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Road No 21, Dhaka 1213, Bangladesh"};
 	String[] destinationList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, House No. 55/B, Road No 21, Dhaka 1213, Bangladesh"};
 
 	@Override
@@ -43,6 +44,41 @@ public class PredictionActivity extends AppCompatActivity {
 		);
 		fetchDistanceMatrix(false);
 
+		List<TravelLog> travelLogs = TravelLog.readData(
+				DatabaseHelper.getDbHelper(PredictionActivity.this),
+				true,
+				new String[]{DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS},
+				null,
+				null,
+				null,
+				null
+		);
+		if (travelLogs.size() > 0) {
+			originPointList = new String[travelLogs.size()];
+			int i = 0;
+			for (TravelLog travelLog : travelLogs) {
+				originPointList[i++] = travelLog.originAddress;
+				Log.d(TAG, "onStart: " + travelLog.originAddress);
+			}
+
+		}
+		travelLogs = TravelLog.readData(
+				DatabaseHelper.getDbHelper(PredictionActivity.this),
+				true,
+				new String[]{DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS},
+				null,
+				null,
+				null,
+				null
+		);
+		if (travelLogs.size() > 0) {
+			destinationList = new String[travelLogs.size()];
+			int i = 0;
+			for (TravelLog travelLog : travelLogs) {
+				destinationList[i++] = travelLog.destAddress;
+				Log.d(TAG, "onStart: " + travelLog.destAddress);
+			}
+		}
 
 		mStartPointAutoComplete = (AutoCompleteTextView) findViewById(R.id.startPoint);
 		mDestinationAutoComplete = (AutoCompleteTextView) findViewById(R.id.destination);
@@ -51,7 +87,7 @@ public class PredictionActivity extends AppCompatActivity {
 				(this, android.R.layout.select_dialog_item, destinationList);
 
 		ArrayAdapter<String> adapterStartPoint = new ArrayAdapter<>
-				(this, android.R.layout.select_dialog_item, startPointList);
+				(this, android.R.layout.select_dialog_item, originPointList);
 
 		mStartPointAutoComplete.setThreshold(1);
 		mDestinationAutoComplete.setThreshold(1);
@@ -77,11 +113,16 @@ public class PredictionActivity extends AppCompatActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		mDestinationAutoComplete.requestFocus();
 		if (mStartPointAutoComplete.getEditableText().toString().isEmpty() && distanceMatrix != null) {
 			mStartPointAutoComplete.setText(distanceMatrix.getFirstOriginAddress());
-
 		}
+//		List<TravelLog> travelLogs = TravelLog.readAllData(DatabaseHelper.getDbHelper(this));
+//		for (TravelLog travelLog : travelLogs){
+//			mDestinationAutoComplete.append(travelLog.toString());
+//			mDestinationAutoComplete.append("\n\n");
+//		}
+		mDestinationAutoComplete.requestFocus();
+
 	}
 
 	private void fetchDistanceMatrix(final boolean forPrediction) {
@@ -106,8 +147,6 @@ public class PredictionActivity extends AppCompatActivity {
 						cancel(true);
 					}
 				}
-				mProgress.setMessage("please wait...");
-				mProgress.show();
 			}
 
 			@Override
