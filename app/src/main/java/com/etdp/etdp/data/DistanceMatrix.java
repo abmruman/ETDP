@@ -17,9 +17,10 @@ import java.util.List;
 import java.util.Locale;
 
 public class DistanceMatrix extends JsonConverter {
+	public static final String INVALID_ELEMENT_STATUS = "ZERO_RESULTS";
+	public static final String VALID_STATUS = "OK";
 	private static final String DM_API_KEY = BuildConfig.DM_API_KEY;
 	private static final String URL = "https://maps.googleapis.com/maps/api/distancematrix/json";
-
 	@SerializedName("destination_addresses")
 	private List<String> destinationAddresses;
 	@SerializedName("origin_addresses")

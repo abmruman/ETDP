@@ -66,11 +66,7 @@ public class PredictionActivity extends AppCompatActivity {
 				String destAddress = mDestinationAutoComplete.getText().toString();
 
 				if (originAddress.isEmpty() || destAddress.isEmpty()) {
-					Toast.makeText(
-							PredictionActivity.this,
-							"Please enter both addresses.",
-							Toast.LENGTH_LONG
-					).show();
+					mPredictionResult.setText("Please enter both addresses.");
 					return;
 				}
 				fetchDistanceMatrix(true);
@@ -133,58 +129,62 @@ public class PredictionActivity extends AppCompatActivity {
 					return;
 				}
 				distanceMatrix = dm;
-				if (mStartPointAutoComplete.getEditableText().toString().isEmpty()) {
+				if (mStartPointAutoComplete.getEditableText().toString().isEmpty() && distanceMatrix.getStatus().equals(DistanceMatrix.VALID_STATUS)) {
 					mStartPointAutoComplete.setText(distanceMatrix.getFirstOriginAddress());
 				}
+				StringBuilder builder = new StringBuilder();
+				builder.append("Prediction Result:");
 
 				if (forPrediction) {
-					StringBuilder builder = new StringBuilder();
-					builder.append("Prediction Result");
-					builder.append("\nETA: ");
-					builder.append(distanceMatrix.getFirstDurationWithUnit());
-					builder.append(" (DistanceMatrix API)");
+					if (!distanceMatrix.getFirstElementStatus().equals(DistanceMatrix.INVALID_ELEMENT_STATUS)) {
+						builder.append("\nETA: ");
+						builder.append(distanceMatrix.getFirstDurationWithUnit());
+						builder.append(" (DistanceMatrix API)");
 
-					StringBuilder where = new StringBuilder();
-					where.append(DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS)
-							.append(" LIKE ?")
-							.append(" AND ")
-							.append(DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS)
-							.append(" LIKE ?");
+						StringBuilder where = new StringBuilder();
+						where.append(DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS)
+								.append(" LIKE ?")
+								.append(" AND ")
+								.append(DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS)
+								.append(" LIKE ?");
 
-					List<TravelLog> travelLogs = TravelLog.readData(
-							DatabaseHelper.getDbHelper(PredictionActivity.this),
-							null,
-							where.toString(),
-							new String[]{originAddress, destAddress},
-							null,
-							"10"
-					);
+						List<TravelLog> travelLogs = TravelLog.readData(
+								DatabaseHelper.getDbHelper(PredictionActivity.this),
+								null,
+								where.toString(),
+								new String[]{originAddress, destAddress},
+								null,
+								"10"
+						);
 
-					if (travelLogs.size() < 1) {
-						builder.append("\n\n(Not enough data for prediction)");
-					} else {
-						builder.append("\nPredicted time: ");
-						long avg = 0;
-						for (TravelLog travelLog: travelLogs) {
-							avg += travelLog.travelTime;
-						}
-						avg /= travelLogs.size();
-
-						int seconds = (int) avg;
-						int minutes = seconds / 60;
-						seconds = seconds % 60;
-						int hours = minutes / 60;
-						minutes = minutes % 60;
-						if (hours > 0) {
-							builder.append(String.format(Locale.ENGLISH, "%d:%02d:%02d hr", hours, minutes, seconds));
+						if (travelLogs.size() < 1) {
+							builder.append("\n\n(Not enough data for prediction)");
 						} else {
-							builder.append(String.format(Locale.ENGLISH, "%d:%02d min", minutes, seconds));
-						}
-						builder.append(" (").append(travelLogs.size()).append(") ");
-					}
+							builder.append("\nPredicted time: ");
+							long avg = 0;
+							for (TravelLog travelLog : travelLogs) {
+								avg += travelLog.travelTime;
+							}
+							avg /= travelLogs.size();
 
+							int seconds = (int) avg;
+							int minutes = seconds / 60;
+							seconds = seconds % 60;
+							int hours = minutes / 60;
+							minutes = minutes % 60;
+							if (hours > 0) {
+								builder.append(String.format(Locale.ENGLISH, "%d:%02d:%02d hr", hours, minutes, seconds));
+							} else {
+								builder.append(String.format(Locale.ENGLISH, "%d:%02d min", minutes, seconds));
+							}
+							builder.append(" (").append(travelLogs.size()).append(") ");
+						}
+					} else {
+						builder.append("\nNo valid results for these addresses.");
+					}
 					mPredictionResult.setText(builder.toString());
 				}
+
 				mProgress.hide();
 			}
 

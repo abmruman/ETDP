@@ -379,14 +379,15 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 					).show();
 					return;
 				}
-				try {
-					distanceMatrix = dm;
+				distanceMatrix = dm;
+				if (distanceMatrix.getStatus().equals(DistanceMatrix.VALID_STATUS)
+						&& !distanceMatrix.getFirstElementStatus().equals(DistanceMatrix.INVALID_ELEMENT_STATUS)) {
 
 					SharedPreferences.Editor editor = sharedPref.edit();
 					editor.putString(DISTANCE_MATRIX, distanceMatrix.toString());
 					editor.apply();
-				} catch (Exception e) {
-					Log.e(TAG, "onPostExecute: " + e.toString());
+				} else {
+					Toast.makeText(GeoLocationActivity.this, R.string.msg_invalid_response_dm, Toast.LENGTH_SHORT).show();
 				}
 			}
 
