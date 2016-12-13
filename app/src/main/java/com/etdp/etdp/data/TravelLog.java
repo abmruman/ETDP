@@ -12,7 +12,7 @@ import java.util.Locale;
 
 public class TravelLog {
 	public static final SimpleDateFormat dayFormat = new SimpleDateFormat("E", Locale.ENGLISH);
-	public static final SimpleDateFormat timeFormat = new SimpleDateFormat("HH00", Locale.ENGLISH);
+	public static final SimpleDateFormat timeFormat = new SimpleDateFormat("H00", Locale.ENGLISH);
 	private boolean readonly;
 	private DatabaseHelper dbHelper;
 	private Long startTime;
@@ -31,37 +31,37 @@ public class TravelLog {
 	public long eta;
 	public long travelTime;
 
-	public TravelLog(
-			DatabaseHelper dbHelper,
-			CustomLocation originLocation,
-			CustomLocation destLocation,
-			String originAddress,
-			String destAddress,
-			String weather,
-			String day,
-			int time,
-			long distance,
-			long eta,
-			long travelTime){
-		this(
-				dbHelper,
-				-1,
-				originLocation,
-				destLocation,
-				originAddress,
-				destAddress,
-				weather,
-				day,
-				time,
-				distance,
-				eta,
-				travelTime
-		);
-	}
+//	public TravelLog(
+//			DatabaseHelper dbHelper,
+//			CustomLocation originLocation,
+//			CustomLocation destLocation,
+//			String originAddress,
+//			String destAddress,
+//			String weather,
+//			String day,
+//			int time,
+//			long distance,
+//			long eta,
+//			long travelTime){
+//		this(
+//				dbHelper,
+//				-1,
+//				originLocation,
+//				destLocation,
+//				originAddress,
+//				destAddress,
+//				weather,
+//				day,
+//				time,
+//				distance,
+//				eta,
+//				travelTime
+//		);
+//	}
 
 	public TravelLog(
 			DatabaseHelper dbHelper,
-			int _id,
+			//int _id,
 			CustomLocation originLocation,
 			CustomLocation destLocation,
 			String originAddress,
@@ -72,7 +72,7 @@ public class TravelLog {
 			long distance,
 			long eta,
 			long travelTime){
-		if(_id>-1) this._id = _id;
+		//if(_id>-1) this._id = _id;
 		this.dbHelper = dbHelper;
 		this.originLocation = originLocation;
 		this.destLocation = destLocation;
@@ -129,7 +129,6 @@ public class TravelLog {
 			long startTime,
 			long endTime
 	) throws NullPointerException {
-
 		this(
 				dbHelper,
 				originLocation,
@@ -176,10 +175,9 @@ public class TravelLog {
 	}
 
 	public long saveData() {
-		if (readonly || originLocation == null || destLocation == null || distanceMatrix == null) {
+		if (readonly || dbHelper==null) {
 			return -1;
 		}
-		if(dbHelper==null) return -1;
 
 		synchronized (dbHelper) {
 			// Gets the data repository in write mode
@@ -234,7 +232,7 @@ public class TravelLog {
 		return travelLogs;
 	}
 
-	private static TravelLog cursorToTravelLog(DatabaseHelper dbHelper, Cursor cursor) {
+	public static TravelLog cursorToTravelLog(DatabaseHelper dbHelper, Cursor cursor) {
 		return new TravelLog(
 				dbHelper,
 				CustomLocation.fromJson(cursor.getString(cursor.getColumnIndex(DatabaseContract.TravelEntry.COLUMN_ORIGIN_LOCATION))),
@@ -250,7 +248,7 @@ public class TravelLog {
 		);
 	}
 
-	private ContentValues getContentValue() {
+	public ContentValues getContentValue() {
 		// Create a new map of values, where column names are the keys
 		ContentValues values = new ContentValues();
 

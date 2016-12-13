@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -78,7 +79,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_geo_location);
-
 		mProgress = new ProgressDialog(this);
 		mProgress.setMessage(getString(R.string.msg_please_wait));
 
@@ -130,6 +130,8 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 		mPredictTimeButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
+				SQLiteDatabase writableDatabase = DatabaseHelper.getDbHelper(GeoLocationActivity.this).getWritableDatabase();
+				writableDatabase.close();
 				Intent intent = new Intent(GeoLocationActivity.this, PredictionActivity.class);
 				intent.putExtra(CURRENT_LOCATION, new CustomLocation(currentLocation).toJson());
 				startActivity(intent);
@@ -624,7 +626,6 @@ public class GeoLocationActivity extends AppCompatActivity implements EasyPermis
 							getString(R.string.msg_db_saved),
 							Toast.LENGTH_SHORT
 					).show();
-					removeData();
 				} else {
 					//TODO: Handle this error.
 					Toast.makeText(

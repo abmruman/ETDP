@@ -7,6 +7,7 @@ public final class DatabaseContract {
 	//Remember, changing this doesn't change the existing values in database
 	public static final String UNIT = "metric";
 	// If you change the database schema, you must increment the database version.
+	public static final boolean ALLOW_DUMMY_DATA_ON_CREATE = true;
 	public static final int DATABASE_VERSION = 1;
 	public static final String DATABASE_NAME = "etdp.db";
 	private static final String TEXT_TYPE = " TEXT";
