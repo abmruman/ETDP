@@ -24,4 +24,5 @@
 	<string name="msg_weather">"Weather: "</string>
 	<string name="msg_db_saved">Data saved successfully.</string>
 	<string name="msg_db_save_failed">Error saving data.</string>
+	<string name="msg_invalid_response_dm">Invalid DistanceMatrix API response.</string>
 </resources>

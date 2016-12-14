@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -28,7 +29,7 @@ public class PredictionActivity extends AppCompatActivity {
 	CustomLocation currentLocation;
 
 	ProgressDialog mProgress;
-	String[] startPointList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, Rd No 21, Dhaka, Bangladesh"};
+	String[] originPointList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, Rd No 21, Dhaka, Bangladesh"};
 	String[] destinationList = {"Mumtaz Manzil, Muktijoddha Rd, Dhaka, Bangladesh", "American International University-Bangladesh, Rd No 21, Dhaka, Bangladesh"};
 
 	@Override
@@ -43,6 +44,41 @@ public class PredictionActivity extends AppCompatActivity {
 		);
 		fetchDistanceMatrix(false);
 
+		List<TravelLog> travelLogs = TravelLog.readData(
+				DatabaseHelper.getDbHelper(PredictionActivity.this),
+				true,
+				new String[]{DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS},
+				null,
+				null,
+				null,
+				null
+		);
+		if (travelLogs.size() > 0) {
+			originPointList = new String[travelLogs.size()];
+			int i = 0;
+			for (TravelLog travelLog : travelLogs) {
+				originPointList[i++] = travelLog.originAddress;
+				Log.d(TAG, "onStart: " + travelLog.originAddress);
+			}
+
+		}
+		travelLogs = TravelLog.readData(
+				DatabaseHelper.getDbHelper(PredictionActivity.this),
+				true,
+				new String[]{DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS},
+				null,
+				null,
+				null,
+				null
+		);
+		if (travelLogs.size() > 0) {
+			destinationList = new String[travelLogs.size()];
+			int i = 0;
+			for (TravelLog travelLog : travelLogs) {
+				destinationList[i++] = travelLog.destAddress;
+				Log.d(TAG, "onStart: " + travelLog.destAddress);
+			}
+		}
 
 		mStartPointAutoComplete = (AutoCompleteTextView) findViewById(R.id.startPoint);
 		mDestinationAutoComplete = (AutoCompleteTextView) findViewById(R.id.destination);
@@ -51,7 +87,7 @@ public class PredictionActivity extends AppCompatActivity {
 				(this, android.R.layout.select_dialog_item, destinationList);
 
 		ArrayAdapter<String> adapterStartPoint = new ArrayAdapter<>
-				(this, android.R.layout.select_dialog_item, startPointList);
+				(this, android.R.layout.select_dialog_item, originPointList);
 
 		mStartPointAutoComplete.setThreshold(1);
 		mDestinationAutoComplete.setThreshold(1);
@@ -66,11 +102,7 @@ public class PredictionActivity extends AppCompatActivity {
 				String destAddress = mDestinationAutoComplete.getText().toString();
 
 				if (originAddress.isEmpty() || destAddress.isEmpty()) {
-					Toast.makeText(
-							PredictionActivity.this,
-							"Please enter both addresses.",
-							Toast.LENGTH_LONG
-					).show();
+					mPredictionResult.setText("Please enter both addresses.");
 					return;
 				}
 				fetchDistanceMatrix(true);
@@ -81,17 +113,16 @@ public class PredictionActivity extends AppCompatActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		mDestinationAutoComplete.requestFocus();
 		if (mStartPointAutoComplete.getEditableText().toString().isEmpty() && distanceMatrix != null) {
 			mStartPointAutoComplete.setText(distanceMatrix.getFirstOriginAddress());
+		}
+//		List<TravelLog> travelLogs = TravelLog.readAllData(DatabaseHelper.getDbHelper(this));
+//		for (TravelLog travelLog : travelLogs){
+//			mDestinationAutoComplete.append(travelLog.toString());
+//			mDestinationAutoComplete.append("\n\n");
+//		}
+		mDestinationAutoComplete.requestFocus();
 
-		}
-		StringBuilder builder = new StringBuilder();
-		List<TravelLog> travelLogs = TravelLog.readAllData(DatabaseHelper.getDbHelper(PredictionActivity.this));
-		for(TravelLog travelLog : travelLogs){
-			builder.append(travelLog.toString()).append("\n\n");
-		}
-		mDestinationAutoComplete.setText(builder.toString());
 	}
 
 	private void fetchDistanceMatrix(final boolean forPrediction) {
@@ -116,8 +147,6 @@ public class PredictionActivity extends AppCompatActivity {
 						cancel(true);
 					}
 				}
-				mProgress.setMessage("please wait...");
-				mProgress.show();
 			}
 
 			@Override
@@ -139,59 +168,62 @@ public class PredictionActivity extends AppCompatActivity {
 					return;
 				}
 				distanceMatrix = dm;
-				if (mStartPointAutoComplete.getEditableText().toString().isEmpty()) {
+				if (mStartPointAutoComplete.getEditableText().toString().isEmpty() && distanceMatrix.getStatus().equals(DistanceMatrix.VALID_STATUS)) {
 					mStartPointAutoComplete.setText(distanceMatrix.getFirstOriginAddress());
 				}
+				StringBuilder builder = new StringBuilder();
+				builder.append("Prediction Result:");
 
 				if (forPrediction) {
-					StringBuilder builder = new StringBuilder();
-					builder.append("Prediction Result");
-					builder.append("\nETA: ");
-					builder.append(distanceMatrix.getFirstDurationWithUnit());
-					builder.append(" (DistanceMatrix API)");
+					if (!distanceMatrix.getFirstElementStatus().equals(DistanceMatrix.INVALID_ELEMENT_STATUS)) {
+						builder.append("\nETA: ");
+						builder.append(distanceMatrix.getFirstDurationWithUnit());
+						builder.append(" (DistanceMatrix API)");
 
-					StringBuilder where = new StringBuilder();
-					where.append(DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS)
-							.append(" LIKE ?")
-							.append(" AND ")
-							.append(DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS)
-							.append(" LIKE ?");
+						StringBuilder where = new StringBuilder();
+						where.append(DatabaseContract.TravelEntry.COLUMN_ORIGIN_ADDRESS)
+								.append(" LIKE ?")
+								.append(" AND ")
+								.append(DatabaseContract.TravelEntry.COLUMN_DEST_ADDRESS)
+								.append(" LIKE ?");
 
-					List<TravelLog> travelLogs = TravelLog.readData(
-							DatabaseHelper.getDbHelper(PredictionActivity.this),
-							null,
-							where.toString(),
-							new String[]{originAddress, destAddress},
-							null,
-							"10"
-					);
-					builder.append("\nPredicted time: ");
+						List<TravelLog> travelLogs = TravelLog.readData(
+								DatabaseHelper.getDbHelper(PredictionActivity.this),
+								null,
+								where.toString(),
+								new String[]{originAddress, destAddress},
+								null,
+								"10"
+						);
 
-					if (travelLogs.size() < 1) {
-						builder.append("(Not enough data for prediction)");
-					} else {
-						long avg = 0;
-						for (int i = 0; i < travelLogs.size(); i++) {
-							avg += travelLogs.get(i).travelTime;
-						}
-						avg /= travelLogs.size();
-
-						int seconds = (int) avg;
-						int minutes = seconds / 60;
-						seconds = seconds % 60;
-						int hours = minutes / 60;
-						minutes = minutes % 60;
-						if (hours > 0) {
-							builder.append(String.format(Locale.ENGLISH, "%d:%02d:%02d hr", hours, minutes, seconds));
+						if (travelLogs.size() < 1) {
+							builder.append("\n\n(Not enough data for prediction)");
 						} else {
-							builder.append(String.format(Locale.ENGLISH, "%d:%02d min", minutes, seconds));
+							builder.append("\nPredicted time: ");
+							long avg = 0;
+							for (TravelLog travelLog : travelLogs) {
+								avg += travelLog.travelTime;
+							}
+							avg /= travelLogs.size();
+
+							int seconds = (int) avg;
+							int minutes = seconds / 60;
+							seconds = seconds % 60;
+							int hours = minutes / 60;
+							minutes = minutes % 60;
+							if (hours > 0) {
+								builder.append(String.format(Locale.ENGLISH, "%d:%02d:%02d hr", hours, minutes, seconds));
+							} else {
+								builder.append(String.format(Locale.ENGLISH, "%d:%02d min", minutes, seconds));
+							}
+							builder.append(" (").append(travelLogs.size()).append(") ");
 						}
-
-
+					} else {
+						builder.append("\nNo valid results for these addresses.");
 					}
-
 					mPredictionResult.setText(builder.toString());
 				}
+
 				mProgress.hide();
 			}
 
